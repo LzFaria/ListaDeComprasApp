@@ -1,13 +1,22 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
-import android.net.Uri
-import java.util.UUID // <-- NOVO IMPORT
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.Exclude
+import java.util.UUID
 
 data class ListaDeCompras(
-    // 1. NOVO CAMPO: ID Único
-    val id: String = UUID.randomUUID().toString(),
+    @DocumentId
+    val id: String = "",
 
-    // 2. MUDANÇA: 'val' para 'var' para permitir edição
-    var nome: String,
-    var imagemUri: Uri?
-)
+    // 1. CORREÇÃO: 'val' mudou para 'var' para permitir a edição (RF003)
+    var nome: String = "",
+
+    val userId: String = "",
+
+    // 'imageUrl' é o que salvamos no Firestore
+    var imageUrl: String? = null
+) {
+    // 'imagemUriLocal' é a Uri temporária da câmera/galeria
+    @get:Exclude
+    var imagemUriLocal: android.net.Uri? = null
+}

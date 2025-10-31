@@ -1,15 +1,15 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.listadecomprasapp.databinding.ItemListaBinding
 
-// Adicionado 'onItemLongClick'
+// 1. MUDANÇA: 'listas' agora é uma 'var' (variável) para podermos filtrar
 class ListasAdapter(
-    private val listas: List<ListaDeCompras>,
-    private val onItemClick: (ListaDeCompras) -> Unit, // Para Navegação
-    private val onItemLongClick: (ListaDeCompras) -> Unit // <-- NOVO (Para Editar/Excluir)
+    private var listas: List<ListaDeCompras>, // Agora é 'var'
+    private val onItemClick: (ListaDeCompras) -> Unit,
+    private val onItemLongClick: (ListaDeCompras) -> Unit
 ) : RecyclerView.Adapter<ListasAdapter.ListaViewHolder>() {
 
     inner class ListaViewHolder(private val binding: ItemListaBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -17,25 +17,34 @@ class ListasAdapter(
         fun bind(lista: ListaDeCompras) {
             binding.textViewNomeLista.text = lista.nome
 
-            if (lista.imagemUri != null) {
-                binding.imageViewLista.setImageURI(lista.imagemUri)
+            // 2. MUDANÇA: Lógica da Imagem
+            // Por enquanto, o 'lista.imageUrl' está vazio (não adicionamos nada).
+            // Vamos apenas mostrar o placeholder (RF003).
+            // No próximo passo (Adicionar Lista), vamos implementar o Glide/Coil
+            // para carregar a 'lista.imageUrl' aqui.
+            if (lista.imageUrl != null) {
+                // TODO: Carregar imagem da URL com Glide/Coil
+                binding.imageViewLista.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder
             } else {
+                // Se não há imagem, mostrar placeholder
                 binding.imageViewLista.setImageResource(android.R.drawable.ic_menu_gallery)
             }
 
-            // Configurar os dois cliques
-
-            // Clique Simples (Navegar para a lista de itens)
+            // Lógica de cliques (sem mudanças)
             itemView.setOnClickListener {
                 onItemClick(lista)
             }
-
-            // Clique Longo (Abrir diálogo de Editar/Excluir)
             itemView.setOnLongClickListener {
                 onItemLongClick(lista)
-                true // Consome o clique
+                true
             }
         }
+    }
+
+    // 3. NOVA FUNÇÃO: Para o filtro da barra de busca
+    fun atualizarListas(novaLista: List<ListaDeCompras>) {
+        listas = novaLista
+        notifyDataSetChanged() // Avisa o RecyclerView para se redesenhar
     }
 
     // --- Funções Padrão (completas) ---

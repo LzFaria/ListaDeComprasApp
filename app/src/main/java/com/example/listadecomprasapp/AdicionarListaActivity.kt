@@ -1,11 +1,13 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -17,28 +19,33 @@ class AdicionarListaActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdicionarListaBinding
 
-    // Variável de classe para guardar a Uri (pode ser nula)
-    private var imagemUriSelecionada: Uri? = null
-    // Variável de classe para guardar a Uri da câmera temporariamente
-    private var uriParaTirarFoto: Uri? = null
+    // Conexão com o "Chef"
+    private val viewModel: AdicionarListaViewModel by viewModels()
 
+    // Variáveis para guardar o estado da tela
+    private var imagemUriSelecionada: Uri? = null
+    private var uriParaTirarFoto: Uri? = null
     private var listaParaEditar: ListaDeCompras? = null
     private var modoDeEdicao = false
 
-    // Lançador da GALERIA
+    // --- DEFINIÇÃO CORRETA DOS "LANÇADORES" (NO TOPO DA CLASSE) ---
+
+    // 1. Lançador da GALERIA
     private val selecionarImagemLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
+        // Este bloco roda quando o usuário escolhe uma imagem
         if (uri != null) {
             imagemUriSelecionada = uri
             binding.imageViewPreview.setImageURI(uri)
         }
     }
 
-    // Lançador da CÂMERA
+    // 2. Lançador da CÂMERA
     private val tirarFotoLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { sucesso: Boolean ->
+        // Este bloco roda quando o usuário tira a foto
         if (sucesso) {
             val uriDaFoto = uriParaTirarFoto
             if (uriDaFoto != null) {
@@ -50,10 +57,11 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
-    // Lançador de PERMISSÃO da Câmera
+    // 3. Lançador de PERMISSÃO da Câmera
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
+        // Este bloco roda quando o usuário permite ou nega
         if (isGranted) {
             lancarCamera()
         } else {
@@ -61,26 +69,26 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
+    // -----------------------------------------------------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAdicionarListaBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // --- Lógica de Modo Edição ---
+        observarViewModel()
+
+        // Lógica do Modo Edição (Ainda não implementada 100%)
         val listaId = intent.getStringExtra("LISTA_ID_PARA_EDITAR")
         if (listaId == null) {
             modoDeEdicao = false
             binding.buttonAdicionarLista.text = "Adicionar"
         } else {
             modoDeEdicao = true
-            listaParaEditar = GerenciadorDeDados.encontrarListaPorId(listaId)
-            if (listaParaEditar == null) {
-                Toast.makeText(this, "Erro: Lista não encontrada.", Toast.LENGTH_LONG).show()
-                finish()
-                return
-            }
+            // TODO: Buscar dados do ViewModel para preencher
+            // listaParaEditar = GerenciadorDeDados.encontrarListaPorId(listaId) // (Código antigo, vamos refatorar)
             binding.buttonAdicionarLista.text = "Salvar Alterações"
-            preencherFormulario(listaParaEditar!!)
+            // preencherFormulario(listaParaEditar!!) // (Código antigo, vamos refatorar)
         }
 
         // --- Lógica de Cliques ---
@@ -93,7 +101,56 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
-    // --- Funções da Câmera e Galeria ---
+    /**
+     * O Garçom (Activity) fica de olho nos quadros de aviso do Chef
+     */
+    private fun observarViewModel() {
+        // Observa o quadro "concluido"
+        viewModel.concluido.observe(this) { concluido ->
+            if (concluido) {
+                Toast.makeText(this, "Lista salva com sucesso!", Toast.LENGTH_SHORT).show()
+                finish() // Fecha a tela e volta para a lista
+            }
+        }
+
+        // Observa o quadro "error"
+        viewModel.error.observe(this) { error ->
+            if (error != null && error.isNotEmpty()) {
+                Toast.makeText(this, "Erro: $error", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Observa o quadro "loading"
+        viewModel.loading.observe(this) { isLoading ->
+            // Mostra um "Carregando..." (ProgressBar) ou desabilita o botão
+            binding.buttonAdicionarLista.isEnabled = !isLoading
+            // (Opcional: podemos adicionar um ProgressBar visível)
+        }
+    }
+
+    /**
+     * O Garçom (Activity) entrega o pedido para o Chef (ViewModel)
+     */
+    private fun salvarLista() {
+        val nomeDaLista = binding.editTextNomeLista.text.toString()
+
+        if (nomeDaLista.isEmpty()) {
+            Toast.makeText(this, "Por favor, insira um nome para a lista.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // TODO: Implementar a lógica de Edição
+        if (modoDeEdicao) {
+            Toast.makeText(this, "Função Editar ainda será implementada.", Toast.LENGTH_SHORT).show()
+            // viewModel.atualizarLista(...)
+        } else {
+            // Entrega o pedido ao Chef (ViewModel)
+            viewModel.salvarLista(nomeDaLista, imagemUriSelecionada)
+        }
+    }
+
+    // --- Funções da Câmera/Galeria (Completas e Corretas) ---
+
     private fun mostrarDialogoEscolhaFoto() {
         val opcoes = arrayOf("Tirar Foto", "Escolher da Galeria")
         AlertDialog.Builder(this)
@@ -101,6 +158,7 @@ class AdicionarListaActivity : AppCompatActivity() {
             .setItems(opcoes) { dialog, which ->
                 when (which) {
                     0 -> checarPermissaoCamera()
+                    // Esta é a linha que deu erro: 'launch' agora existe!
                     1 -> selecionarImagemLauncher.launch("image/*")
                 }
             }
@@ -110,10 +168,7 @@ class AdicionarListaActivity : AppCompatActivity() {
 
     private fun checarPermissaoCamera() {
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
                 lancarCamera()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
@@ -125,16 +180,9 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
-    // --- AQUI ESTÁ A CORREÇÃO ---
     private fun lancarCamera() {
-        // 1. Criamos uma Uri local (não-nula)
         val uriLocalSegura: Uri = createImageUri()
-
-        // 2. Guardamos ela na nossa variável de classe (que é nula)
-        //    para usar no 'callback' do 'tirarFotoLauncher'
         uriParaTirarFoto = uriLocalSegura
-
-        // 3. Lançamos a câmera usando a Uri local (não-nula)
         tirarFotoLauncher.launch(uriLocalSegura)
     }
 
@@ -147,39 +195,13 @@ class AdicionarListaActivity : AppCompatActivity() {
         )
     }
 
-    // --- Funções de Preencher e Salvar ---
-
     private fun preencherFormulario(lista: ListaDeCompras) {
+        // (Código antigo, vamos refatorar quando fizermos a Edição)
         binding.editTextNomeLista.setText(lista.nome)
 
-        lista.imagemUri?.let { uriDaImagem ->
-            imagemUriSelecionada = uriDaImagem
-            binding.imageViewPreview.setImageURI(uriDaImagem)
+        lista.imageUrl?.let { urlDaImagem ->
+            // TODO: Usar Glide/Coil para carregar a URL
+            binding.imageViewPreview.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-    }
-
-    private fun salvarLista() {
-        val nomeDaLista = binding.editTextNomeLista.text.toString()
-
-        if (nomeDaLista.isEmpty()) {
-            Toast.makeText(this, "Por favor, insira um nome para a lista.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (modoDeEdicao && listaParaEditar != null) {
-            listaParaEditar!!.nome = nomeDaLista
-            listaParaEditar!!.imagemUri = imagemUriSelecionada
-            Toast.makeText(this, "Lista atualizada!", Toast.LENGTH_SHORT).show()
-
-        } else {
-            val novaLista = ListaDeCompras(
-                nome = nomeDaLista,
-                imagemUri = imagemUriSelecionada
-            )
-            GerenciadorDeDados.adicionarLista(novaLista)
-            Toast.makeText(this, "Lista '$nomeDaLista' adicionada!", Toast.LENGTH_SHORT).show()
-        }
-
-        finish()
     }
 }
