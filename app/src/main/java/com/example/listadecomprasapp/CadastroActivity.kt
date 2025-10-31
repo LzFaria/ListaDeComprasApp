@@ -1,42 +1,71 @@
 package com.example.listadecomprasapp
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
+import androidx.activity.viewModels // <-- NOVO IMPORT
 import androidx.appcompat.app.AppCompatActivity
-import com.example.listadecomprasapp.databinding.ActivityCadastroBinding // Importante!
+import com.example.listadecomprasapp.databinding.ActivityCadastroBinding
 
 class CadastroActivity : AppCompatActivity() {
 
-    // Declaração do ViewBinding
     private lateinit var binding: ActivityCadastroBinding
+
+    // 1. O Garçom (Activity) agora tem o contato do Chef (ViewModel)
+    private val cadastroViewModel: CadastroViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inflar o layout
         binding = ActivityCadastroBinding.inflate(layoutInflater)
-        // Definir o conteúdo da tela
         setContentView(binding.root)
 
+        // 2. Configurar o Garçom para "observar" os quadros de aviso do Chef
+        observarViewModel()
+
+        // Configurar os botões
         binding.buttonCriar.setOnClickListener {
             fazerCadastro()
         }
 
+        // (Lógica do seu botão "Voltar" que você tinha adicionado)
         binding.textViewVoltarLogin.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            finish() // Simplesmente fecha esta tela
         }
     }
 
+    /**
+     * Configura os "observadores"
+     */
+    private fun observarViewModel() {
+        // Observa o quadro de SUCESSO
+        cadastroViewModel.cadastroResult.observe(this) { firebaseUser ->
+            if (firebaseUser != null) {
+                // O Chef avisou que o cadastro deu certo!
+                Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show()
+                finish() // Fecha a tela de Cadastro e volta pro Login
+            }
+        }
+
+        // Observa o quadro de ERRO
+        cadastroViewModel.error.observe(this) { errorMessage ->
+            if (errorMessage.isNotEmpty()) {
+                // O Chef avisou que deu um problema!
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * Função chamada pelo clique do botão "Criar"
+     */
     private fun fazerCadastro() {
-        // Coletar os dados dos campos
+        // 1. Coletar os dados (igual a antes)
         val nome = binding.editTextNomeCompleto.text.toString()
         val email = binding.editTextEmailCadastro.text.toString()
         val senha = binding.editTextSenhaCadastro.text.toString()
         val confirmarSenha = binding.editTextConfirmarSenha.text.toString()
 
+        // 2. Validações locais (RF002) - igual a antes
         if (nome.isEmpty() || email.isEmpty() || senha.isEmpty() || confirmarSenha.isEmpty()) {
             Toast.makeText(this, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
             return
@@ -49,21 +78,14 @@ class CadastroActivity : AppCompatActivity() {
             Toast.makeText(this, "As senhas não coincidem.", Toast.LENGTH_SHORT).show()
             return
         }
+        if (senha.length < 6) {
+            Toast.makeText(this, "A senha deve ter pelo menos 6 caracteres.", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        // Se todas as validações passaram:
-
-        // Criar um novo objeto Usuario com os dados
-        val novoUsuario = Usuario(nome = nome, email = email, senha = senha)
-
-        // Adicionar o usuário ao nosso gerenciador global
-        GerenciadorDeDados.adicionarUsuario(novoUsuario)
-
-        // Informar o sucesso e fechar a tela
-        Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show()
-
-        // (Opcional, mas útil para debugar) Imprimir no console para ver a lista crescendo
-        println("Usuários cadastrados: ${GerenciadorDeDados.listaDeUsuarios}")
-
-        finish() // Fecha a tela de Cadastro e volta pro Login
+        // 3. MUDANÇA CRUCIAL:
+        // O Garçom entrega o pedido ao Chef.
+        // REMOVEMOS: a chamada para GerenciadorDeDados.adicionarUsuario(...)
+        cadastroViewModel.cadastrar(nome, email, senha)
     }
 }
