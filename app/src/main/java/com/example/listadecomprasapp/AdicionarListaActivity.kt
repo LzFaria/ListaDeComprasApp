@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp // Seu pacote
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -17,7 +17,9 @@ class AdicionarListaActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdicionarListaBinding
 
+    // Variável de classe para guardar a Uri (pode ser nula)
     private var imagemUriSelecionada: Uri? = null
+    // Variável de classe para guardar a Uri da câmera temporariamente
     private var uriParaTirarFoto: Uri? = null
 
     private var listaParaEditar: ListaDeCompras? = null
@@ -38,8 +40,13 @@ class AdicionarListaActivity : AppCompatActivity() {
         ActivityResultContracts.TakePicture()
     ) { sucesso: Boolean ->
         if (sucesso) {
-            imagemUriSelecionada = uriParaTirarFoto
-            binding.imageViewPreview.setImageURI(imagemUriSelecionada)
+            val uriDaFoto = uriParaTirarFoto
+            if (uriDaFoto != null) {
+                imagemUriSelecionada = uriDaFoto
+                binding.imageViewPreview.setImageURI(uriDaFoto)
+            } else {
+                Toast.makeText(this, "Erro ao salvar foto", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -59,11 +66,10 @@ class AdicionarListaActivity : AppCompatActivity() {
         binding = ActivityAdicionarListaBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Lógica de Modo Edição
+        // --- Lógica de Modo Edição ---
         val listaId = intent.getStringExtra("LISTA_ID_PARA_EDITAR")
         if (listaId == null) {
             modoDeEdicao = false
-            // title = "Adicionar Lista"
             binding.buttonAdicionarLista.text = "Adicionar"
         } else {
             modoDeEdicao = true
@@ -73,12 +79,11 @@ class AdicionarListaActivity : AppCompatActivity() {
                 finish()
                 return
             }
-            // title = "Editar Lista"
             binding.buttonAdicionarLista.text = "Salvar Alterações"
             preencherFormulario(listaParaEditar!!)
         }
 
-        // Lógica de Cliques
+        // --- Lógica de Cliques ---
         binding.buttonAdicionarLista.setOnClickListener {
             salvarLista()
         }
@@ -88,7 +93,7 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
-    // Funções da Câmera e Galeria (Completas)
+    // --- Funções da Câmera e Galeria ---
     private fun mostrarDialogoEscolhaFoto() {
         val opcoes = arrayOf("Tirar Foto", "Escolher da Galeria")
         AlertDialog.Builder(this)
@@ -112,7 +117,6 @@ class AdicionarListaActivity : AppCompatActivity() {
                 lancarCamera()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
-                // TODO: Mostrar diálogo explicativo (opcional)
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
             else -> {
@@ -121,9 +125,17 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
+    // --- AQUI ESTÁ A CORREÇÃO ---
     private fun lancarCamera() {
-        uriParaTirarFoto = createImageUri()
-        tirarFotoLauncher.launch(uriParaTirarFoto)
+        // 1. Criamos uma Uri local (não-nula)
+        val uriLocalSegura: Uri = createImageUri()
+
+        // 2. Guardamos ela na nossa variável de classe (que é nula)
+        //    para usar no 'callback' do 'tirarFotoLauncher'
+        uriParaTirarFoto = uriLocalSegura
+
+        // 3. Lançamos a câmera usando a Uri local (não-nula)
+        tirarFotoLauncher.launch(uriLocalSegura)
     }
 
     private fun createImageUri(): Uri {
@@ -135,13 +147,14 @@ class AdicionarListaActivity : AppCompatActivity() {
         )
     }
 
-    // Funções de Preencher e Salvar (Completas)
+    // --- Funções de Preencher e Salvar ---
 
     private fun preencherFormulario(lista: ListaDeCompras) {
         binding.editTextNomeLista.setText(lista.nome)
-        if (lista.imagemUri != null) {
-            imagemUriSelecionada = lista.imagemUri
-            binding.imageViewPreview.setImageURI(lista.imagemUri)
+
+        lista.imagemUri?.let { uriDaImagem ->
+            imagemUriSelecionada = uriDaImagem
+            binding.imageViewPreview.setImageURI(uriDaImagem)
         }
     }
 
