@@ -7,46 +7,82 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-// O "Chef de Cozinha" da tela AdicionarListaActivity
 class AdicionarListaViewModel : ViewModel() {
 
-    // O Chef conhece o Gerente
     private val repository = ListasRepository
 
-    // "Quadro de avisos" para avisar o Garçom (Activity) que terminamos
+    // --- Quadro de avisos (sem mudanças) ---
     private val _concluido = MutableLiveData<Boolean>(false)
     val concluido: LiveData<Boolean> = _concluido
-
-    // "Quadro de avisos" de erros
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
-
-    // "Quadro de avisos" de carregamento (Loading)
     private val _loading = MutableLiveData<Boolean>(false)
     val loading: LiveData<Boolean> = _loading
 
+    // --- 1. NOVO QUADRO DE AVISOS ---
+    // Para entregar ao Garçom (Activity) a lista que ele precisa editar
+    private val _listaParaEditar = MutableLiveData<ListaDeCompras?>()
+    val listaParaEditar: LiveData<ListaDeCompras?> = _listaParaEditar
+
     /**
-     * O Garçom (Activity) chama esta função para criar uma nova lista
+     * Salva uma NOVA lista (Sem mudanças)
      */
     fun salvarLista(nome: String, uriLocal: Uri?) {
-        // 1. Mostra o "Carregando..."
         _loading.postValue(true)
-
         viewModelScope.launch {
             try {
-                // 2. Pede ao Gerente para salvar (e fazer upload se necessário)
                 repository.adicionarLista(nome, uriLocal)
-                // 3. Avisa no quadro que terminou com sucesso
                 _concluido.postValue(true)
             } catch (e: Exception) {
-                // 4. Avisa no quadro de erro
                 _error.postValue(e.message)
             } finally {
-                // 5. Esconde o "Carregando..."
                 _loading.postValue(false)
             }
         }
     }
 
-    // TODO: Função de Editar
+    // --- 2. NOVAS FUNÇÕES ---
+
+    /**
+     * Busca os dados da lista que o usuário quer editar
+     */
+    fun carregarLista(id: String) {
+        _loading.postValue(true)
+        viewModelScope.launch {
+            try {
+                // Pede ao Gerente para buscar a lista por ID
+                val lista = repository.getListaPorId(id)
+                // Coloca no quadro de avisos
+                _listaParaEditar.postValue(lista)
+            } catch (e: Exception) {
+                _error.postValue(e.message)
+            } finally {
+                _loading.postValue(false)
+            }
+        }
+    }
+
+    /**
+     * Salva as MUDANÇAS de uma lista existente
+     */
+    fun atualizarLista(
+        id: String,
+        novoNome: String,
+        novaUriLocal: Uri?,
+        urlImagemAntiga: String?
+    ) {
+        _loading.postValue(true)
+        viewModelScope.launch {
+            try {
+                // Pede ao Gerente para atualizar
+                repository.atualizarLista(id, novoNome, novaUriLocal, urlImagemAntiga)
+                // Avisa que terminou
+                _concluido.postValue(true)
+            } catch (e: Exception) {
+                _error.postValue(e.message)
+            } finally {
+                _loading.postValue(false)
+            }
+        }
+    }
 }

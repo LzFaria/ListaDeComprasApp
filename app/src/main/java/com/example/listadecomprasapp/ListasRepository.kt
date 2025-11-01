@@ -17,7 +17,7 @@ object ListasRepository {
     private fun getUserId(): String? = auth.currentUser?.uid
 
     /**
-     * Busca as listas do usuário (Sem mudanças)
+     * Busca as listas do usuário (Função completa)
      */
     suspend fun getMinhasListas(): List<ListaDeCompras> {
         val userId = getUserId() ?: return emptyList()
@@ -29,12 +29,13 @@ object ListasRepository {
                 .await()
             return task.toObjects(ListaDeCompras::class.java)
         } catch (e: Exception) {
+            println("Erro ao buscar listas: ${e.message}")
             return emptyList()
         }
     }
 
     /**
-     * Faz upload da imagem (Sem mudanças)
+     * Faz upload da imagem (Função completa)
      */
     private suspend fun uploadImagemLista(uri: Uri): String {
         val userId = getUserId() ?: "unknown"
@@ -45,7 +46,7 @@ object ListasRepository {
     }
 
     /**
-     * Adiciona uma nova lista (Sem mudanças)
+     * Adiciona uma nova lista (Função completa)
      */
     suspend fun adicionarLista(nome: String, uriLocal: Uri?) {
         val userId = getUserId() ?: return
@@ -62,29 +63,71 @@ object ListasRepository {
     }
 
     /**
-     * RF003: Exclui uma lista do Firestore e sua imagem do Storage
+     * Exclui uma lista (Função completa)
      */
     suspend fun excluirLista(lista: ListaDeCompras) {
-
-        // --- AQUI ESTÁ A CORREÇÃO ---
-        // 1. Criamos uma cópia local imutável (val) da URL.
         val urlDaImagem = lista.imageUrl
-
-        // 2. Verificamos a CÓPIA, não a variável original.
         if (urlDaImagem != null) {
             try {
-                // 3. Usamos a CÓPIA (que o Kotlin sabe que é segura).
                 val storageRef = storage.getReferenceFromUrl(urlDaImagem)
                 storageRef.delete().await()
             } catch (e: Exception) {
-                // Se a imagem já foi deletada ou der erro, apenas continuamos.
                 println("Erro ao deletar imagem do Storage: ${e.message}")
             }
         }
-
-        // Exclui o documento da lista no Firestore
         db.collection("listas").document(lista.id).delete().await()
-
         // TODO: Excluir itens da sub-coleção
+    }
+
+    // --- Funções de Edição (Adicionadas no Passo 6B) ---
+
+    /**
+     * Exclui uma imagem anterior do Storage (função auxiliar)
+     */
+    private suspend fun excluirImagemAnterior(imageUrl: String?) {
+        if (imageUrl == null) return
+        try {
+            val storageRef = storage.getReferenceFromUrl(imageUrl)
+            storageRef.delete().await()
+        } catch (e: Exception) {
+            println("Erro ao deletar imagem anterior: ${e.message}")
+        }
+    }
+
+    /**
+     * Busca uma única lista pelo seu ID
+     */
+    suspend fun getListaPorId(id: String): ListaDeCompras? {
+        try {
+            val doc = db.collection("listas").document(id).get().await()
+            return doc.toObject(ListaDeCompras::class.java)
+        } catch (e: Exception) {
+            println("Erro ao buscar lista por ID: ${e.message}")
+            return null
+        }
+    }
+
+    /**
+     * RF003: Atualiza uma lista existente no Firestore
+     */
+    suspend fun atualizarLista(
+        id: String,
+        novoNome: String,
+        novaUriLocal: Uri?,
+        urlImagemAntiga: String?
+    ) {
+        var novaUrlImagem = urlImagemAntiga
+
+        if (novaUriLocal != null) {
+            novaUrlImagem = uploadImagemLista(novaUriLocal)
+            excluirImagemAnterior(urlImagemAntiga)
+        }
+
+        val dadosAtualizados = mapOf(
+            "nome" to novoNome,
+            "imageUrl" to novaUrlImagem
+        )
+
+        db.collection("listas").document(id).update(dadosAtualizados).await()
     }
 }

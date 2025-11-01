@@ -3,11 +3,11 @@ package com.example.listadecomprasapp
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load // <-- NOVO IMPORT (da biblioteca Coil)
 import com.example.listadecomprasapp.databinding.ItemListaBinding
 
-// 1. MUDANÇA: 'listas' agora é uma 'var' (variável) para podermos filtrar
 class ListasAdapter(
-    private var listas: List<ListaDeCompras>, // Agora é 'var'
+    private var listas: List<ListaDeCompras>,
     private val onItemClick: (ListaDeCompras) -> Unit,
     private val onItemLongClick: (ListaDeCompras) -> Unit
 ) : RecyclerView.Adapter<ListasAdapter.ListaViewHolder>() {
@@ -17,14 +17,14 @@ class ListasAdapter(
         fun bind(lista: ListaDeCompras) {
             binding.textViewNomeLista.text = lista.nome
 
-            // 2. MUDANÇA: Lógica da Imagem
-            // Por enquanto, o 'lista.imageUrl' está vazio (não adicionamos nada).
-            // Vamos apenas mostrar o placeholder (RF003).
-            // No próximo passo (Adicionar Lista), vamos implementar o Glide/Coil
-            // para carregar a 'lista.imageUrl' aqui.
+            // --- 1. AQUI ESTÁ A MUDANÇA (RF003) ---
             if (lista.imageUrl != null) {
-                // TODO: Carregar imagem da URL com Glide/Coil
-                binding.imageViewLista.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder
+                // Se temos uma URL, usamos a Coil para carregar a imagem
+                binding.imageViewLista.load(lista.imageUrl) {
+                    crossfade(true) // Efeito suave de transição
+                    placeholder(android.R.drawable.ic_menu_gallery) // Placeholder
+                    error(android.R.drawable.ic_menu_close_clear_cancel) // Imagem de erro
+                }
             } else {
                 // Se não há imagem, mostrar placeholder
                 binding.imageViewLista.setImageResource(android.R.drawable.ic_menu_gallery)
@@ -41,13 +41,13 @@ class ListasAdapter(
         }
     }
 
-    // 3. NOVA FUNÇÃO: Para o filtro da barra de busca
+    // Função para o filtro da barra de busca (sem mudanças)
     fun atualizarListas(novaLista: List<ListaDeCompras>) {
         listas = novaLista
-        notifyDataSetChanged() // Avisa o RecyclerView para se redesenhar
+        notifyDataSetChanged()
     }
 
-    // --- Funções Padrão (completas) ---
+    // --- Funções Padrão (completas, sem mudanças) ---
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListaViewHolder {
         val binding = ItemListaBinding.inflate(
             LayoutInflater.from(parent.context),
