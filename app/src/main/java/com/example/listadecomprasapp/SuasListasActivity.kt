@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.SearchView
 import android.widget.Toast
-import androidx.activity.viewModels // <-- NOVO IMPORT
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -15,10 +15,9 @@ class SuasListasActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySuasListasBinding
     private lateinit var adapter: ListasAdapter
 
-    // 1. O Garçom agora tem o contato do Chef de Listas!
+    // Conexão com o "Chef" (sem mudanças)
     private val listasViewModel: ListasViewModel by viewModels()
 
-    // 2. Guarda a lista completa (para o filtro de busca)
     private var listaCompleta: List<ListaDeCompras> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,14 +25,11 @@ class SuasListasActivity : AppCompatActivity() {
         binding = ActivitySuasListasBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Configurar o RecyclerView (o LayoutManager)
-        // Usamos a grade de 2 colunas que você pediu!
         binding.recyclerViewListas.layoutManager = GridLayoutManager(this, 2)
 
-        // 3. Configurar os "Observadores"
         observarViewModel()
 
-        // --- Configuração dos Botões (sem mudanças) ---
+        // Configuração dos Botões (sem mudanças)
         binding.fabAdicionarLista.setOnClickListener {
             val intent = Intent(this, AdicionarListaActivity::class.java)
             startActivity(intent)
@@ -42,7 +38,7 @@ class SuasListasActivity : AppCompatActivity() {
             mostrarDialogoLogout()
         }
 
-        // --- Listener da Busca (sem mudanças na configuração) ---
+        // Listener da Busca (sem mudanças)
         binding.searchViewListas.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -53,51 +49,47 @@ class SuasListasActivity : AppCompatActivity() {
     }
 
     /**
-     * O Garçom fica de olho nos quadros de aviso do Chef
+     * O Garçom fica de olho nos quadros de aviso do Chef (sem mudanças)
      */
     private fun observarViewModel() {
-        // Observa o quadro de SUCESSO (a lista de listas)
         listasViewModel.listas.observe(this) { listas ->
-            // 1. Guarda a lista completa
             listaCompleta = listas
-            // 2. Atualiza o "manual" (Adapter) com a lista
-            adapter = ListasAdapter(
-                listas,
-                { listaClicada -> // Clique Simples (Navegar)
-                    // TODO: Atualizar esta lógica quando o RF004 for refatorado
-                    val intent = Intent(this, ListaItensActivity::class.java)
-                    intent.putExtra("NOME_DA_LISTA", listaClicada.nome)
-                    intent.putExtra("LISTA_ID", listaClicada.id)
-                    startActivity(intent)
-                },
-                { listaClicada -> // Clique Longo (Editar/Excluir Lista)
-                    // TODO: Atualizar esta lógica para o Firebase
-                    mostrarDialogoOpcoesLista(listaClicada)
-                }
-            )
-            // 3. Conecta o manual ao RecyclerView
-            binding.recyclerViewListas.adapter = adapter
+
+            // 1. MUDANÇA: Passamos a lista para o adapter
+            // (Se o adapter já existir, apenas atualizamos)
+            if (::adapter.isInitialized) {
+                adapter.atualizarListas(listas)
+            } else {
+                adapter = ListasAdapter(
+                    listas,
+                    { listaClicada -> // Clique Simples (Navegar)
+                        val intent = Intent(this, ListaItensActivity::class.java)
+                        intent.putExtra("NOME_DA_LISTA", listaClicada.nome)
+                        intent.putExtra("LISTA_ID", listaClicada.id)
+                        startActivity(intent)
+                    },
+                    { listaClicada -> // Clique Longo (Editar/Excluir Lista)
+                        mostrarDialogoOpcoesLista(listaClicada)
+                    }
+                )
+                binding.recyclerViewListas.adapter = adapter
+            }
         }
 
-        // Observa o quadro de ERRO
         listasViewModel.error.observe(this) { errorMsg ->
-            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
+            if (errorMsg.isNotEmpty()) {
+                Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
+            }
         }
     }
 
-    /**
-     * O Garçom (Activity) chama o Chef (ViewModel) para
-     * carregar os dados toda vez que a tela volta ao foco.
-     */
     override fun onResume() {
         super.onResume()
-        // Pede ao Chef para carregar as listas do Estoque (Firebase)
-        listasViewModel.carregarListas()
+        listasViewModel.carregarListas() // (Sem mudanças)
     }
 
     /**
-     * Lógica da barra de busca (RF005)
-     * Agora ela filtra a 'listaCompleta' que veio do ViewModel
+     * Lógica da barra de busca (Sem mudanças)
      */
     private fun filtrarListas(query: String?) {
         val listaFiltrada = if (query.isNullOrEmpty()) {
@@ -107,24 +99,83 @@ class SuasListasActivity : AppCompatActivity() {
                 it.nome.contains(query, ignoreCase = true)
             }
         }
-        // Atualiza o adapter com os dados filtrados
-        adapter.atualizarListas(listaFiltrada)
+
+        // Se o adapter já foi criado, apenas atualiza
+        if (::adapter.isInitialized) {
+            adapter.atualizarListas(listaFiltrada)
+        }
     }
 
-    // --- Funções de Diálogo e Logout (SEM MUDANÇAS POR ENQUANTO) ---
-    // (Ainda usam o GerenciadorDeDados, vamos refatorar depois)
+    // --- Funções de Diálogo (COM MUDANÇAS) ---
 
+    // (Esta função não muda)
     private fun mostrarDialogoOpcoesLista(lista: ListaDeCompras) {
-        // ... (código existente)
+        val opcoes = arrayOf("Editar", "Excluir")
+        AlertDialog.Builder(this)
+            .setTitle(lista.nome)
+            .setItems(opcoes) { dialog, which ->
+                when (which) {
+                    0 -> abrirTelaDeEdicaoLista(lista)
+                    1 -> confirmarExclusaoLista(lista)
+                }
+            }
+            .create()
+            .show()
     }
+
+    // (Esta função não muda)
     private fun abrirTelaDeEdicaoLista(lista: ListaDeCompras) {
-        // ... (código existente)
+        val intent = Intent(this, AdicionarListaActivity::class.java)
+        intent.putExtra("LISTA_ID_PARA_EDITAR", lista.id)
+        startActivity(intent)
     }
+
+    /**
+     * 2. MUDANÇA CRUCIAL:
+     * O diálogo de confirmação agora chama o 'ViewModel'
+     * em vez do 'GerenciadorDeDados'.
+     */
     private fun confirmarExclusaoLista(lista: ListaDeCompras) {
-        // ... (código existente)
+        AlertDialog.Builder(this)
+            .setTitle("Excluir Lista")
+            .setMessage("Tem certeza que deseja excluir a lista '${lista.nome}'?")
+            .setPositiveButton("Excluir") { dialog, _ ->
+
+                // MUDOU AQUI:
+                // Em vez de 'GerenciadorDeDados.remover...',
+                // nós pedimos ao "Chef" (ViewModel) para excluir.
+                listasViewModel.excluirLista(lista)
+
+                // Não precisamos mais do 'setupRecyclerView()' aqui,
+                // pois o ViewModel vai recarregar a lista
+                // e o "observador" (observe) vai atualizar a tela!
+
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
     }
+
+    // (Esta função não muda)
     private fun mostrarDialogoLogout() {
-        // ... (código existente)
-        // (Este diálogo NÃO precisa de mudança, já está bom)
+        AlertDialog.Builder(this)
+            .setTitle("Sair")
+            .setMessage("Tem certeza que deseja sair?")
+            .setPositiveButton("Sair") { dialog, _ ->
+                // TODO: Chamar o AuthRepository.logout()
+                GerenciadorDeDados.fazerLogout()
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
     }
 }

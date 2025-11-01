@@ -1,28 +1,26 @@
 package com.example.listadecomprasapp
 
-import android.net.Uri // <-- NOVO IMPORT
+import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage // <-- NOVO IMPORT
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.tasks.await
-import java.util.UUID // <-- NOVO IMPORT
+import java.util.UUID
 
 object ListasRepository {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = Firebase.firestore
-    private val storage = Firebase.storage // 1. O "Estoque" de Imagens
+    private val storage = Firebase.storage
 
-    // Retorna o UID do usuário logado ou null
     private fun getUserId(): String? = auth.currentUser?.uid
 
     /**
-     * Busca as listas do usuário (função que já tínhamos)
+     * Busca as listas do usuário (Sem mudanças)
      */
     suspend fun getMinhasListas(): List<ListaDeCompras> {
         val userId = getUserId() ?: return emptyList()
-
         try {
             val task = db.collection("listas")
                 .whereEqualTo("userId", userId)
@@ -36,45 +34,57 @@ object ListasRepository {
     }
 
     /**
-     * RF003: Faz upload de uma imagem (Uri local) para o Firebase Storage
-     * e retorna a URL (String) de download.
+     * Faz upload da imagem (Sem mudanças)
      */
     private suspend fun uploadImagemLista(uri: Uri): String {
-        // Cria um nome de arquivo único (ex: 'listas/uid_aleatorio.jpg')
         val userId = getUserId() ?: "unknown"
         val fileName = "listas/${userId}_${UUID.randomUUID()}.jpg"
-
-        // 1. Pega a referência do arquivo no Storage
         val storageRef = storage.reference.child(fileName)
-        // 2. Faz o upload do arquivo
         storageRef.putFile(uri).await()
-        // 3. Pega a URL de download pública do arquivo
         return storageRef.downloadUrl.await().toString()
     }
 
     /**
-     * RF003: Adiciona uma nova lista no Firestore
+     * Adiciona uma nova lista (Sem mudanças)
      */
     suspend fun adicionarLista(nome: String, uriLocal: Uri?) {
-        val userId = getUserId() ?: return // Precisa estar logado
-
+        val userId = getUserId() ?: return
         var downloadUrl: String? = null
         if (uriLocal != null) {
-            // Se o usuário escolheu uma imagem, faz o upload
             downloadUrl = uploadImagemLista(uriLocal)
         }
-
-        // Cria o "molde" para salvar no Firestore
         val novaLista = ListaDeCompras(
-            // O Firestore vai gerar o 'id'
             nome = nome,
             userId = userId,
             imageUrl = downloadUrl
         )
-
-        // Salva o objeto 'novaLista' na coleção 'listas'
         db.collection("listas").add(novaLista).await()
     }
 
-    // TODO: Funções de editar e excluir
+    /**
+     * RF003: Exclui uma lista do Firestore e sua imagem do Storage
+     */
+    suspend fun excluirLista(lista: ListaDeCompras) {
+
+        // --- AQUI ESTÁ A CORREÇÃO ---
+        // 1. Criamos uma cópia local imutável (val) da URL.
+        val urlDaImagem = lista.imageUrl
+
+        // 2. Verificamos a CÓPIA, não a variável original.
+        if (urlDaImagem != null) {
+            try {
+                // 3. Usamos a CÓPIA (que o Kotlin sabe que é segura).
+                val storageRef = storage.getReferenceFromUrl(urlDaImagem)
+                storageRef.delete().await()
+            } catch (e: Exception) {
+                // Se a imagem já foi deletada ou der erro, apenas continuamos.
+                println("Erro ao deletar imagem do Storage: ${e.message}")
+            }
+        }
+
+        // Exclui o documento da lista no Firestore
+        db.collection("listas").document(lista.id).delete().await()
+
+        // TODO: Excluir itens da sub-coleção
+    }
 }
