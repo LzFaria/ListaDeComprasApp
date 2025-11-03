@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
 import android.graphics.Paint
 import android.view.LayoutInflater
@@ -7,51 +7,50 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.listadecomprasapp.databinding.ItemItemListaBinding
 
 class ItensAdapter(
-    private val itens: List<ItemDaLista>,
+    // 1. MUDANÇA: 'itens' agora é uma 'var' para atualização
+    private var itens: List<ItemDaLista>,
     private val onItemCheckedChange: (ItemDaLista, Boolean) -> Unit,
-    private val onItemLongClick: (ItemDaLista) -> Unit, // Para Excluir
-    private val onItemClick: (ItemDaLista) -> Unit      // Para Editar
+    private val onItemLongClick: (ItemDaLista) -> Unit,
+    private val onItemClick: (ItemDaLista) -> Unit
 ) : RecyclerView.Adapter<ItensAdapter.ItemViewHolder>() {
 
     inner class ItemViewHolder(private val binding: ItemItemListaBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ItemDaLista) {
-            // --- Código de bind ---
             binding.textViewNomeItem.text = item.nome
             binding.textViewQtdUnidade.text = "${item.quantidade} ${item.unidade}"
+
+            // 2. MUDANÇA: Lidar com o 'comprado' e listeners
+            // Removemos o listener antigo para evitar loops
+            binding.checkBoxComprado.setOnCheckedChangeListener(null)
             binding.checkBoxComprado.isChecked = item.comprado
 
+            // 3. MUDANÇA: Define o ícone com base no NOME (String) da categoria
             val icone = when (item.categoria) {
-                Categoria.FRUTA -> R.drawable.ic_fruta
-                Categoria.VERDURA -> R.drawable.ic_verdura
-                Categoria.CARNE -> R.drawable.ic_carne
-                Categoria.OUTRO -> R.drawable.ic_outro
+                Categoria.FRUTA.nome -> R.drawable.ic_fruta
+                Categoria.VERDURA.nome -> R.drawable.ic_verdura
+                Categoria.CARNE.nome -> R.drawable.ic_carne
+                else -> R.drawable.ic_outro
             }
             binding.imageViewIconeCategoria.setImageResource(icone)
 
             atualizarVisualizacaoComprado(item.comprado)
 
-            // --- Listeners ---
-
-            // CheckBox
+            // 4. MUDANÇA: Novo listener para o CheckBox
             binding.checkBoxComprado.setOnCheckedChangeListener { _, isChecked ->
-                atualizarVisualizacaoComprado(isChecked)
                 onItemCheckedChange(item, isChecked)
             }
 
-            // Clique Longo (Excluir)
+            // Listeners de clique (sem mudanças)
             itemView.setOnLongClickListener {
                 onItemLongClick(item)
                 true
             }
-
-            // Clique Simples (Editar)
             itemView.setOnClickListener {
                 onItemClick(item)
             }
         }
 
-        // Função interna para riscar o texto
         private fun atualizarVisualizacaoComprado(comprado: Boolean) {
             if (comprado) {
                 binding.textViewNomeItem.paintFlags = binding.textViewNomeItem.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
@@ -63,7 +62,13 @@ class ItensAdapter(
         }
     }
 
-    // --- Funções Padrão do Adapter (AGORA COMPLETAS) ---
+    // 5. NOVA FUNÇÃO: Para atualizar a lista (ex: filtro)
+    fun atualizarItens(novosItens: List<ItemDaLista>) {
+        this.itens = novosItens
+        notifyDataSetChanged()
+    }
+
+    // --- Funções Padrão (completas) ---
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val binding = ItemItemListaBinding.inflate(
             LayoutInflater.from(parent.context),

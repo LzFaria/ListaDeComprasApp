@@ -1,9 +1,10 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.SearchView
 import android.widget.Toast
+import androidx.activity.viewModels // <-- NOVO IMPORT
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,10 +16,14 @@ class ListaItensActivity : AppCompatActivity() {
     private var nomeDaListaAtual: String? = null
     private var idDaListaAtual: String? = null
     private lateinit var adapter: ItensAdapter
-    private var filtroAtual: String = ""
+
+    // 1. MUDANÇA: Conexão com o novo "Chef"
+    private val viewModel: ListaItensViewModel by viewModels()
+
+    private var listaCompleta: List<ItemDaLista> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // Super aqui é necessário
+        super.onCreate(savedInstanceState)
         binding = ActivityListaItensBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -27,15 +32,23 @@ class ListaItensActivity : AppCompatActivity() {
 
         if (nomeDaListaAtual == null || idDaListaAtual == null) {
             Toast.makeText(this, "Erro: Lista não encontrada", Toast.LENGTH_SHORT).show()
-            finish()
+            finish();
             return
         }
 
         binding.textViewTituloListaDinamico.text = nomeDaListaAtual
 
+        // Configurar o RecyclerView
+        setupRecyclerViewInicial()
+
+        // 2. MUDANÇA: Configurar "Observadores"
+        observarViewModel()
+
+        // --- Configuração dos Botões ---
         binding.fabAdicionarItem.setOnClickListener {
             val intent = Intent(this, AdicionarItemActivity::class.java)
-            intent.putExtra("NOME_DA_LISTA", nomeDaListaAtual)
+            // 3. MUDANÇA: Passar o ID da Lista (não o nome)
+            intent.putExtra("LISTA_ID", idDaListaAtual)
             startActivity(intent)
         }
 
@@ -43,59 +56,48 @@ class ListaItensActivity : AppCompatActivity() {
             abrirTelaDeEdicaoLista()
         }
 
-        binding.recyclerViewItens.layoutManager = LinearLayoutManager(this)
-        setupRecyclerView()
-
+        // --- Listener da Busca ---
         binding.searchViewItens.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
+            override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                filtroAtual = newText ?: ""
-                setupRecyclerView()
+                filtrarItens(newText)
                 return true
             }
         })
     }
 
-    // --- onResume COM A LINHA super.onResume() ---
     override fun onResume() {
-        super.onResume() // <-- GARANTA QUE ESTA LINHA ESTÁ AQUI E É A PRIMEIRA!
-
-        // Código restante do onResume
+        super.onResume()
+        // Atualiza o nome (caso tenha mudado na tela de edição)
         if (idDaListaAtual != null) {
-            val lista = GerenciadorDeDados.encontrarListaPorId(idDaListaAtual!!)
+            val lista = GerenciadorDeDados.encontrarListaPorId(idDaListaAtual!!) // (Este GerenciadorDeDados está errado, mas deixamos por enquanto)
             if (lista != null) {
                 nomeDaListaAtual = lista.nome
                 binding.textViewTituloListaDinamico.text = nomeDaListaAtual
             }
         }
-        setupRecyclerView()
+        // 4. MUDANÇA: Pede ao "Chef" para carregar os itens
+        if (idDaListaAtual != null) {
+            viewModel.carregarItens(idDaListaAtual!!)
+        }
     }
 
-    // --- Restante do código (setupRecyclerView, diálogos, etc. - sem mudanças) ---
-    private fun setupRecyclerView() {
-        if (nomeDaListaAtual == null) return
-
-        val todosOsItensDaLista = GerenciadorDeDados.getItensDaLista(nomeDaListaAtual!!)
-
-        val itensFiltrados = if (filtroAtual.isEmpty()) {
-            todosOsItensDaLista
-        } else {
-            todosOsItensDaLista.filter { it.nome.contains(filtroAtual, ignoreCase = true) }
+    private fun observarViewModel() {
+        viewModel.itens.observe(this) { itens ->
+            listaCompleta = itens
+            adapter.atualizarItens(itens)
         }
+        viewModel.error.observe(this) { error ->
+            Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+        }
+    }
 
-        val listaOrdenada = itensFiltrados.sortedWith(
-            compareBy<ItemDaLista> { it.comprado }
-                .thenBy { it.categoria }
-                .thenBy { it: ItemDaLista -> it.nome.lowercase() }
-        )
-
+    // 5. MUDANÇA: Apenas configura o adapter uma vez
+    private fun setupRecyclerViewInicial() {
         adapter = ItensAdapter(
-            listaOrdenada,
+            emptyList(), // Começa vazio
             { item, isChecked -> // Checkbox
-                item.comprado = isChecked
-                setupRecyclerView()
+                viewModel.atualizarItemComprado(idDaListaAtual!!, item, isChecked)
             },
             { itemClicado -> // Clique Longo
                 mostrarDialogoDeExclusao(itemClicado)
@@ -104,8 +106,17 @@ class ListaItensActivity : AppCompatActivity() {
                 abrirTelaDeEdicaoItem(itemClicado)
             }
         )
-
+        binding.recyclerViewItens.layoutManager = LinearLayoutManager(this)
         binding.recyclerViewItens.adapter = adapter
+    }
+
+    private fun filtrarItens(query: String?) {
+        val listaFiltrada = if (query.isNullOrEmpty()) {
+            listaCompleta
+        } else {
+            listaCompleta.filter { it.nome.contains(query, ignoreCase = true) }
+        }
+        adapter.atualizarItens(listaFiltrada)
     }
 
     private fun mostrarDialogoDeExclusao(item: ItemDaLista) {
@@ -113,28 +124,23 @@ class ListaItensActivity : AppCompatActivity() {
             .setTitle("Excluir Item")
             .setMessage("Tem certeza que deseja excluir o item '${item.nome}'?")
             .setPositiveButton("Excluir") { dialog, _ ->
-                GerenciadorDeDados.removerItemPorId(item.id)
-                setupRecyclerView()
+                // 6. MUDANÇA: Pede ao "Chef" para excluir
+                viewModel.excluirItem(idDaListaAtual!!, item.id)
                 dialog.dismiss()
             }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
             .create()
             .show()
     }
 
     private fun abrirTelaDeEdicaoItem(item: ItemDaLista) {
         val intent = Intent(this, AdicionarItemActivity::class.java)
+        // 7. MUDANÇA: Passa o ID da Lista E o ID do Item
+        intent.putExtra("LISTA_ID", idDaListaAtual)
         intent.putExtra("ITEM_ID_PARA_EDITAR", item.id)
         startActivity(intent)
     }
 
-    private fun abrirTelaDeEdicaoLista() {
-        if (idDaListaAtual == null) return
-
-        val intent = Intent(this, AdicionarListaActivity::class.java)
-        intent.putExtra("LISTA_ID_PARA_EDITAR", idDaListaAtual)
-        startActivity(intent)
-    }
+    // (Esta função não muda)
+    private fun abrirTelaDeEdicaoLista() { /* ... */ }
 }

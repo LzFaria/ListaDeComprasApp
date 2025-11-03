@@ -1,132 +1,132 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.CheckBox
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.listadecomprasapp.databinding.ActivityAdicionarItemBinding
 
 class AdicionarItemActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdicionarItemBinding
-    private var nomeDaListaPai: String? = null
+    private val viewModel: AdicionarItemViewModel by viewModels()
+
+    private var listaId: String? = null
     private var itemParaEditar: ItemDaLista? = null
     private var modoDeEdicao = false
 
-    // Lista de opções para o Spinner de Categoria
-    private val categorias = listOf("Fruta", "Verdura", "Carne", "Outro")
+    // Lista de opções para o Spinner de Categoria (baseado no Enum)
+    private val categorias = Categoria.values().map { it.nome }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAdicionarItemBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Configurar os dois Spinners
+        // --- 1. AQUI ESTÁ A CORREÇÃO ---
+        // Chamar as funções para popular AMBOS os spinners
         setupSpinnerUnidades()
         setupSpinnerCategoria()
 
-        // --- Verificar o Modo (Adicionar vs Editar) ---
+        observarViewModel()
+
+        // Receber os IDs
+        listaId = intent.getStringExtra("LISTA_ID")
         val itemId = intent.getStringExtra("ITEM_ID_PARA_EDITAR")
+
+        if (listaId == null) {
+            Toast.makeText(this, "Erro: ID da Lista não encontrado", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
         if (itemId == null) {
             // Modo Adicionar
             modoDeEdicao = false
-            nomeDaListaPai = intent.getStringExtra("NOME_DA_LISTA")
-            title = "Adicionar Item"
             binding.buttonAdicionarItem.text = "Adicionar Item"
         } else {
             // Modo Edição
             modoDeEdicao = true
-            itemParaEditar = GerenciadorDeDados.encontrarItemPorId(itemId)
-            if (itemParaEditar == null) {
-                Toast.makeText(this, "Erro: Item não encontrado.", Toast.LENGTH_LONG).show()
-                finish()
-                return
-            }
-            title = "Editar Item"
             binding.buttonAdicionarItem.text = "Salvar Alterações"
-            preencherFormulario(itemParaEditar!!)
+            viewModel.carregarItem(listaId!!, itemId)
         }
 
         binding.buttonAdicionarItem.setOnClickListener {
             salvarItem()
         }
     }
-    private fun setupSpinnerCategoria() {
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            categorias
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategoria.adapter = adapter
+
+    private fun observarViewModel() {
+        viewModel.concluido.observe(this) {
+            if (it) {
+                Toast.makeText(this, "Salvo com sucesso!", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
+        viewModel.error.observe(this) {
+            if (it != null && it.isNotEmpty()) {
+                Toast.makeText(this, "Erro: $it", Toast.LENGTH_LONG).show()
+            }
+        }
+        viewModel.loading.observe(this) {
+            binding.buttonAdicionarItem.isEnabled = !it
+        }
+        viewModel.itemParaEditar.observe(this) { item ->
+            if (item != null) {
+                itemParaEditar = item
+                preencherFormulario(item)
+            }
+        }
     }
 
-    //Preenche o formulário com os dados de um item existente (Modo Edição)/
     private fun preencherFormulario(item: ItemDaLista) {
         binding.editTextNomeItem.setText(item.nome)
         binding.editTextQuantidade.setText(item.quantidade)
-
         selecionarItemDoSpinner(binding.spinnerUnidade, item.unidade)
-
-        // MUDANÇA: Seleciona a categoria correta no novo Spinner
-        val nomeCategoria = when (item.categoria) {
-            Categoria.FRUTA -> "Fruta"
-            Categoria.VERDURA -> "Verdura"
-            Categoria.CARNE -> "Carne"
-            Categoria.OUTRO -> "Outro"
-        }
-        selecionarItemDoSpinner(binding.spinnerCategoria, nomeCategoria)
+        selecionarItemDoSpinner(binding.spinnerCategoria, item.categoria)
     }
 
-    //Função que salva (adicionando ou atualizando) o item
     private fun salvarItem() {
         val nome = binding.editTextNomeItem.text.toString()
         val quantidade = binding.editTextQuantidade.text.toString()
+        // Agora 'spinnerUnidade' tem um adapter, então 'selectedItem' não é nulo
         val unidade = binding.spinnerUnidade.selectedItem.toString()
+        val categoria = binding.spinnerCategoria.selectedItem.toString()
 
-        //Lê a categoria do novo Spinner
-        val categoria = when (binding.spinnerCategoria.selectedItem.toString()) {
-            "Fruta" -> Categoria.FRUTA
-            "Verdura" -> Categoria.VERDURA
-            "Carne" -> Categoria.CARNE
-            else -> Categoria.OUTRO
-        }
-
-        // Validações
         if (nome.isEmpty() || quantidade.isEmpty()) {
             Toast.makeText(this, "Por favor, preencha nome e quantidade.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Decidir se vai Atualizar ou Adicionar
         if (modoDeEdicao && itemParaEditar != null) {
             // ATUALIZAR
-            itemParaEditar!!.nome = nome
-            itemParaEditar!!.quantidade = quantidade
-            itemParaEditar!!.unidade = unidade
-            itemParaEditar!!.categoria = categoria
-            Toast.makeText(this, "Item atualizado!", Toast.LENGTH_SHORT).show()
-
-        } else if (nomeDaListaPai != null) {
-            // ADICIONAR
-            val novoItem = ItemDaLista(
-                nomeDaListaPai = nomeDaListaPai!!,
+            val itemAtualizado = itemParaEditar!!.copy(
                 nome = nome,
                 quantidade = quantidade,
                 unidade = unidade,
                 categoria = categoria
             )
-            GerenciadorDeDados.adicionarItem(novoItem)
-            Toast.makeText(this, "'$nome' adicionado!", Toast.LENGTH_SHORT).show()
-        }
+            viewModel.atualizarItem(listaId!!, itemAtualizado)
 
-        finish()
+        } else {
+            // ADICIONAR
+            val novoItem = ItemDaLista(
+                nome = nome,
+                quantidade = quantidade,
+                unidade = unidade,
+                categoria = categoria,
+                comprado = false
+            )
+            viewModel.salvarItem(listaId!!, novoItem)
+        }
     }
 
-    // Funções Auxiliares (Spinner - Sem mudanças)
+    // --- 2. A FUNÇÃO QUE FALTAVA ---
+    /**
+     * Configura o Spinner (dropdown) com as unidades de medida
+     */
     private fun setupSpinnerUnidades() {
         val unidades = listOf("un", "kg", "g", "L", "mL", "pct")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, unidades)
@@ -134,8 +134,16 @@ class AdicionarItemActivity : AppCompatActivity() {
         binding.spinnerUnidade.adapter = adapter
     }
 
+    private fun setupSpinnerCategoria() {
+        val adapter = ArrayAdapter(
+            this, android.R.layout.simple_spinner_item,
+            categorias
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerCategoria.adapter = adapter
+    }
+
     private fun selecionarItemDoSpinner(spinner: Spinner, valor: String) {
-        // Esta função serve para AMBOS os spinners!
         val adapter = spinner.adapter as ArrayAdapter<String>
         val posicao = adapter.getPosition(valor)
         if (posicao >= 0) {

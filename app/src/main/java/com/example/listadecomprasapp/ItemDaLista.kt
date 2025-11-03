@@ -1,26 +1,30 @@
-package com.example.listadecomprasapp // Seu pacote
+package com.example.listadecomprasapp
 
-import java.util.UUID // <-- NOVO IMPORT
+import com.google.firebase.firestore.DocumentId
 
-// 1. Definição das Categorias (sem mudanças)
-enum class Categoria {
-    FRUTA,
-    VERDURA,
-    CARNE,
-    OUTRO
+// 1. Convertendo o Enum para String (mais fácil de salvar no Firebase)
+// (Poderíamos manter o Enum, mas String é mais simples)
+enum class Categoria(val nome: String) {
+    FRUTA("Fruta"),
+    VERDURA("Verdura"),
+    CARNE("Carne"),
+    OUTRO("Outro")
 }
 
-// 2. O "molde" (data class) do nosso item
+// O "molde" do Item para o Firestore
 data class ItemDaLista(
-    // 2. NOVO CAMPO: ID Único para cada item
-    val id: String = UUID.randomUUID().toString(), // Gera um ID aleatório
+    @DocumentId
+    val id: String = "", // O Firestore vai preencher
 
-    val nomeDaListaPai: String,
+    // Não precisamos mais do 'nomeDaListaPai', pois o item
+    // viverá DENTRO do documento da lista-pai (em uma sub-coleção)
 
-    // 3. MUDANÇA: 'var' para permitir a edição
-    var nome: String,
-    var quantidade: String,
-    var unidade: String,
-    var categoria: Categoria,
+    var nome: String = "",
+    var quantidade: String = "",
+    var unidade: String = "",
+
+    // Salvamos o nome da categoria como String
+    var categoria: String = Categoria.OUTRO.nome,
+
     var comprado: Boolean = false
 )

@@ -1,11 +1,10 @@
 package com.example.listadecomprasapp
 
 import android.net.Uri
-import java.util.UUID
 
 object GerenciadorDeDados {
 
-    // Usuário
+    // --- Parte do Usuário (Ainda usado pelo Login antigo, se houver) ---
     val listaDeUsuarios = mutableListOf<Usuario>()
 
     fun adicionarUsuario(usuario: Usuario) {
@@ -16,7 +15,7 @@ object GerenciadorDeDados {
         return listaDeUsuarios.find { it.email == email && it.senha == senha }
     }
 
-    // Listas de Compras
+    // --- Parte das Listas de Compras (Ainda usado pela Edição antiga) ---
     val listasDeCompras = mutableListOf<ListaDeCompras>()
 
     fun adicionarLista(lista: ListaDeCompras) {
@@ -31,31 +30,16 @@ object GerenciadorDeDados {
         listasDeCompras.removeAll { it.id == id }
     }
 
-    // Itens da Lista
-    val todosOsItens = mutableListOf<ItemDaLista>()
+    // --- FUNÇÕES DE ITENS REMOVIDAS ---
+    // A lógica de itens (todosOsItens, adicionarItem, getItensDaLista)
+    // foi removida daqui, pois agora é gerenciada pelo ListasRepository
+    // e estava causando os erros de build 'nomeDaListaPai'.
 
-    fun adicionarItem(item: ItemDaLista) {
-        todosOsItens.add(item)
-    }
-
-    fun getItensDaLista(nomeDaLista: String): List<ItemDaLista> {
-        return todosOsItens.filter { it.nomeDaListaPai == nomeDaLista }
-    }
-
-    fun removerItemPorId(id: String) {
-        todosOsItens.removeAll { it.id == id }
-    }
-
-    fun encontrarItemPorId(id: String): ItemDaLista? {
-        return todosOsItens.find { it.id == id }
-    }
-
-    fun removerItensDaLista(nomeDaListaPai: String) {
-        todosOsItens.removeAll { it.nomeDaListaPai == nomeDaListaPai }
-    }
-
+    /**
+     * Limpa os dados da sessão (listas e itens) ao fazer logout.
+     */
     fun fazerLogout() {
         listasDeCompras.clear()
-        todosOsItens.clear()
+        // todosOsItens.clear() // Removido
     }
 }
