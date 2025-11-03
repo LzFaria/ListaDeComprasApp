@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-// O "Chef de Cozinha" da tela ListaItensActivity
 class ListaItensViewModel : ViewModel() {
 
     private val repository = ListasRepository
@@ -17,35 +16,43 @@ class ListaItensViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    fun carregarItens(listaId: String) {
+    /**
+     * RF004 e RF005: Carrega os itens, agora passando o filtro.
+     */
+    fun carregarItens(listaId: String, filtro: String = "") {
         viewModelScope.launch {
             try {
-                _itens.postValue(repository.getItensDaLista(listaId))
+                // Passa o ID da lista E o filtro para o Gerente
+                _itens.postValue(repository.getItensDaLista(listaId, filtro))
             } catch (e: Exception) {
                 _error.postValue(e.message)
             }
         }
     }
 
-    // Esta função estava dando erro
+    /**
+     * Atualiza o item e recarrega a lista (agora sem filtro)
+     */
     fun atualizarItemComprado(listaId: String, item: ItemDaLista, comprado: Boolean) {
         viewModelScope.launch {
             try {
                 item.comprado = comprado
-                repository.atualizarItem(listaId, item) // Agora deve encontrar
-                carregarItens(listaId)
+                repository.atualizarItem(listaId, item)
+                carregarItens(listaId) // Recarrega a lista completa
             } catch (e: Exception) {
                 _error.postValue(e.message)
             }
         }
     }
 
-    // Esta função estava dando erro
+    /**
+     * Exclui o item e recarrega a lista (agora sem filtro)
+     */
     fun excluirItem(listaId: String, itemId: String) {
         viewModelScope.launch {
             try {
-                repository.excluirItem(listaId, itemId) // Agora deve encontrar
-                carregarItens(listaId)
+                repository.excluirItem(listaId, itemId)
+                carregarItens(listaId) // Recarrega
             } catch (e: Exception) {
                 _error.postValue(e.message)
             }

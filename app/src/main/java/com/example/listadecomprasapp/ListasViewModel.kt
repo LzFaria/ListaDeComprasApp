@@ -17,12 +17,14 @@ class ListasViewModel : ViewModel() {
     val error: LiveData<String> = _error
 
     /**
-     * Carrega as listas (Sem mudanças)
+     * RF003 e RF005: Carrega as listas, agora passando o filtro.
+     * Se o filtro estiver vazio, busca todas.
      */
-    fun carregarListas() {
+    fun carregarListas(filtro: String = "") {
         viewModelScope.launch {
             try {
-                val minhasListas = repository.getMinhasListas()
+                // Passa o filtro para o Gerente
+                val minhasListas = repository.getMinhasListas(filtro)
                 _listas.postValue(minhasListas)
             } catch (e: Exception) {
                 _error.postValue("Falha ao carregar listas: ${e.message}")
@@ -30,18 +32,14 @@ class ListasViewModel : ViewModel() {
         }
     }
 
-    // --- 1. NOVA FUNÇÃO ---
     /**
-     * Pede ao "Gerente" para excluir a lista e depois
-     * recarrega as listas restantes para atualizar a tela.
+     * Exclui a lista e recarrega a lista (agora sem filtro)
      */
     fun excluirLista(lista: ListaDeCompras) {
         viewModelScope.launch {
             try {
-                // 1. Pede para excluir
                 repository.excluirLista(lista)
-                // 2. Pede para recarregar a lista (para a UI atualizar)
-                carregarListas()
+                carregarListas() // Recarrega a lista completa
             } catch (e: Exception) {
                 _error.postValue("Falha ao excluir lista: ${e.message}")
             }

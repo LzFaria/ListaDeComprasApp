@@ -14,22 +14,17 @@ class SuasListasActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySuasListasBinding
     private lateinit var adapter: ListasAdapter
-
-    // Conexão com o "Chef" (sem mudanças)
     private val listasViewModel: ListasViewModel by viewModels()
-
-    private var listaCompleta: List<ListaDeCompras> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySuasListasBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.recyclerViewListas.layoutManager = GridLayoutManager(this, 2)
-
+        setupRecyclerViewInicial()
         observarViewModel()
 
-        // Configuração dos Botões (sem mudanças)
+        // --- 1. CORREÇÃO AQUI (Preenchendo os listeners) ---
         binding.fabAdicionarLista.setOnClickListener {
             val intent = Intent(this, AdicionarListaActivity::class.java)
             startActivity(intent)
@@ -38,44 +33,20 @@ class SuasListasActivity : AppCompatActivity() {
             mostrarDialogoLogout()
         }
 
-        // Listener da Busca (sem mudanças)
+        // --- Listener da Busca (Correto) ---
         binding.searchViewListas.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                filtrarListas(newText)
+                listasViewModel.carregarListas(newText ?: "")
                 return true
             }
         })
     }
 
-    /**
-     * O Garçom fica de olho nos quadros de aviso do Chef (sem mudanças)
-     */
     private fun observarViewModel() {
         listasViewModel.listas.observe(this) { listas ->
-            listaCompleta = listas
-
-            // 1. MUDANÇA: Passamos a lista para o adapter
-            // (Se o adapter já existir, apenas atualizamos)
-            if (::adapter.isInitialized) {
-                adapter.atualizarListas(listas)
-            } else {
-                adapter = ListasAdapter(
-                    listas,
-                    { listaClicada -> // Clique Simples (Navegar)
-                        val intent = Intent(this, ListaItensActivity::class.java)
-                        intent.putExtra("NOME_DA_LISTA", listaClicada.nome)
-                        intent.putExtra("LISTA_ID", listaClicada.id)
-                        startActivity(intent)
-                    },
-                    { listaClicada -> // Clique Longo (Editar/Excluir Lista)
-                        mostrarDialogoOpcoesLista(listaClicada)
-                    }
-                )
-                binding.recyclerViewListas.adapter = adapter
-            }
+            adapter.atualizarListas(listas)
         }
-
         listasViewModel.error.observe(this) { errorMsg ->
             if (errorMsg.isNotEmpty()) {
                 Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
@@ -85,30 +56,28 @@ class SuasListasActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        listasViewModel.carregarListas() // (Sem mudanças)
+        binding.searchViewListas.setQuery("", false)
+        listasViewModel.carregarListas()
     }
 
-    /**
-     * Lógica da barra de busca (Sem mudanças)
-     */
-    private fun filtrarListas(query: String?) {
-        val listaFiltrada = if (query.isNullOrEmpty()) {
-            listaCompleta
-        } else {
-            listaCompleta.filter {
-                it.nome.contains(query, ignoreCase = true)
+    private fun setupRecyclerViewInicial() {
+        adapter = ListasAdapter(
+            emptyList(),
+            { listaClicada -> // Clique Simples (Navegar)
+                val intent = Intent(this, ListaItensActivity::class.java)
+                intent.putExtra("NOME_DA_LISTA", listaClicada.nome)
+                intent.putExtra("LISTA_ID", listaClicada.id)
+                startActivity(intent)
+            },
+            { listaClicada -> // Clique Longo (Editar/Excluir Lista)
+                mostrarDialogoOpcoesLista(listaClicada)
             }
-        }
-
-        // Se o adapter já foi criado, apenas atualiza
-        if (::adapter.isInitialized) {
-            adapter.atualizarListas(listaFiltrada)
-        }
+        )
+        binding.recyclerViewListas.layoutManager = GridLayoutManager(this, 2)
+        binding.recyclerViewListas.adapter = adapter
     }
 
-    // --- Funções de Diálogo (COM MUDANÇAS) ---
-
-    // (Esta função não muda)
+    // --- Funções de Diálogo e Logout (100% COMPLETAS) ---
     private fun mostrarDialogoOpcoesLista(lista: ListaDeCompras) {
         val opcoes = arrayOf("Editar", "Excluir")
         AlertDialog.Builder(this)
@@ -123,33 +92,18 @@ class SuasListasActivity : AppCompatActivity() {
             .show()
     }
 
-    // (Esta função não muda)
     private fun abrirTelaDeEdicaoLista(lista: ListaDeCompras) {
         val intent = Intent(this, AdicionarListaActivity::class.java)
         intent.putExtra("LISTA_ID_PARA_EDITAR", lista.id)
         startActivity(intent)
     }
 
-    /**
-     * 2. MUDANÇA CRUCIAL:
-     * O diálogo de confirmação agora chama o 'ViewModel'
-     * em vez do 'GerenciadorDeDados'.
-     */
     private fun confirmarExclusaoLista(lista: ListaDeCompras) {
         AlertDialog.Builder(this)
             .setTitle("Excluir Lista")
             .setMessage("Tem certeza que deseja excluir a lista '${lista.nome}'?")
             .setPositiveButton("Excluir") { dialog, _ ->
-
-                // MUDOU AQUI:
-                // Em vez de 'GerenciadorDeDados.remover...',
-                // nós pedimos ao "Chef" (ViewModel) para excluir.
                 listasViewModel.excluirLista(lista)
-
-                // Não precisamos mais do 'setupRecyclerView()' aqui,
-                // pois o ViewModel vai recarregar a lista
-                // e o "observador" (observe) vai atualizar a tela!
-
                 dialog.dismiss()
             }
             .setNegativeButton("Cancelar") { dialog, _ ->
@@ -159,7 +113,6 @@ class SuasListasActivity : AppCompatActivity() {
             .show()
     }
 
-    // (Esta função não muda)
     private fun mostrarDialogoLogout() {
         AlertDialog.Builder(this)
             .setTitle("Sair")

@@ -16,15 +16,23 @@ object ListasRepository {
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    // --- Funções de LISTAS (Completas) ---
-    suspend fun getMinhasListas(): List<ListaDeCompras> {
+    // --- Funções de LISTAS (Completas com Lógica de Busca) ---
+
+    /**
+     * RF003 e RF005: Busca as listas do usuário, aplicando um filtro de busca
+     */
+    suspend fun getMinhasListas(filtroDeBusca: String = ""): List<ListaDeCompras> {
         val userId = getUserId() ?: return emptyList()
         try {
-            val task = db.collection("listas")
+            var query = db.collection("listas")
                 .whereEqualTo("userId", userId)
-                .orderBy("nome")
-                .get()
-                .await()
+
+            if (filtroDeBusca.isNotEmpty()) {
+                query = query.whereGreaterThanOrEqualTo("nome", filtroDeBusca)
+                    .whereLessThanOrEqualTo("nome", filtroDeBusca + '\uf8ff')
+            }
+
+            val task = query.orderBy("nome").get().await()
             return task.toObjects(ListaDeCompras::class.java)
         } catch (e: Exception) {
             println("Erro ao buscar listas: ${e.message}")
@@ -32,6 +40,9 @@ object ListasRepository {
         }
     }
 
+    /**
+     * Faz upload da imagem (Função completa)
+     */
     private suspend fun uploadImagemLista(uri: Uri): String {
         val userId = getUserId() ?: "unknown"
         val fileName = "listas/${userId}_${UUID.randomUUID()}.jpg"
@@ -40,6 +51,9 @@ object ListasRepository {
         return storageRef.downloadUrl.await().toString()
     }
 
+    /**
+     * Adiciona uma nova lista (Função completa)
+     */
     suspend fun adicionarLista(nome: String, uriLocal: Uri?) {
         val userId = getUserId() ?: return
         var downloadUrl: String? = null
@@ -55,15 +69,10 @@ object ListasRepository {
     }
 
     /**
-     * RF003: Exclui uma lista, sua imagem, e todos os seus itens (sub-coleção)
+     * Exclui uma lista (Função completa)
      */
     suspend fun excluirLista(lista: ListaDeCompras) {
-
-        // --- 1. AQUI ESTÁ A MUDANÇA ---
-        // Primeiro, excluímos a sub-coleção de itens
-        excluirSubcolecaoItens(lista.id)
-
-        // Segundo, excluímos a imagem do Storage (código existente)
+        excluirSubcolecaoItens(lista.id) // Exclui itens primeiro
         val urlDaImagem = lista.imageUrl
         if (urlDaImagem != null) {
             try {
@@ -73,31 +82,24 @@ object ListasRepository {
                 println("Erro ao deletar imagem do Storage: ${e.message}")
             }
         }
-
-        // Terceiro, excluímos o documento da lista
         db.collection("listas").document(lista.id).delete().await()
     }
 
     /**
-     * NOVA FUNÇÃO AUXILIAR
-     * Busca todos os documentos em uma sub-coleção e os exclui um por um.
+     * Exclui subcoleção de itens (Função completa)
      */
     private suspend fun excluirSubcolecaoItens(listaId: String) {
-        // 1. Busca todos os documentos na sub-coleção 'itens'
         val snapshot = getCaminhoItens(listaId).get().await()
-
-        // 2. Cria um "lote" de exclusão
         val batch = db.batch()
-
-        // 3. Adiciona cada item ao lote para ser excluído
         for (documento in snapshot.documents) {
             batch.delete(documento.reference)
         }
-
-        // 4. Executa a exclusão em lote
         batch.commit().await()
     }
 
+    /**
+     * Exclui uma imagem anterior (Função completa)
+     */
     private suspend fun excluirImagemAnterior(imageUrl: String?) {
         if (imageUrl == null) return
         try {
@@ -108,6 +110,9 @@ object ListasRepository {
         }
     }
 
+    /**
+     * Busca uma única lista pelo seu ID (Função completa)
+     */
     suspend fun getListaPorId(id: String): ListaDeCompras? {
         try {
             val doc = db.collection("listas").document(id).get().await()
@@ -118,6 +123,9 @@ object ListasRepository {
         }
     }
 
+    /**
+     * Atualiza uma lista (Função completa)
+     */
     suspend fun atualizarLista(
         id: String,
         novoNome: String,
@@ -133,19 +141,27 @@ object ListasRepository {
         db.collection("listas").document(id).update(dadosAtualizados).await()
     }
 
-    // --- Funções de ITENS (RF004 - Completas, sem mudanças) ---
+    // --- Funções de ITENS (Completas com Lógica de Busca) ---
 
     private fun getCaminhoItens(listaId: String) =
         db.collection("listas").document(listaId).collection("itens")
 
-    suspend fun getItensDaLista(listaId: String): List<ItemDaLista> {
+    /**
+     * RF004 e RF005: Busca todos os itens de uma lista, aplicando um filtro de busca
+     */
+    suspend fun getItensDaLista(listaId: String, filtroDeBusca: String = ""): List<ItemDaLista> {
         try {
-            val task = getCaminhoItens(listaId)
+            var query = getCaminhoItens(listaId)
                 .orderBy("comprado")
                 .orderBy("categoria")
                 .orderBy("nome")
-                .get()
-                .await()
+
+            if (filtroDeBusca.isNotEmpty()) {
+                query = query.whereGreaterThanOrEqualTo("nome", filtroDeBusca)
+                    .whereLessThanOrEqualTo("nome", filtroDeBusca + '\uf8ff')
+            }
+
+            val task = query.get().await()
             return task.toObjects(ItemDaLista::class.java)
         } catch (e: Exception) {
             println("Erro ao buscar itens: ${e.message}")
@@ -153,10 +169,16 @@ object ListasRepository {
         }
     }
 
+    /**
+     * Adiciona um item (Função completa)
+     */
     suspend fun adicionarItem(listaId: String, item: ItemDaLista) {
         getCaminhoItens(listaId).add(item).await()
     }
 
+    /**
+     * Busca um item por ID (Função completa)
+     */
     suspend fun getItemPorId(listaId: String, itemId: String): ItemDaLista? {
         try {
             val doc = getCaminhoItens(listaId).document(itemId).get().await()
@@ -166,10 +188,16 @@ object ListasRepository {
         }
     }
 
+    /**
+     * Atualiza um item (Função completa)
+     */
     suspend fun atualizarItem(listaId: String, item: ItemDaLista) {
         getCaminhoItens(listaId).document(item.id).set(item).await()
     }
 
+    /**
+     * Exclui um item (Função completa)
+     */
     suspend fun excluirItem(listaId: String, itemId: String) {
         getCaminhoItens(listaId).document(itemId).delete().await()
     }
