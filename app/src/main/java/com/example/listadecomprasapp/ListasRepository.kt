@@ -2,6 +2,7 @@ package com.example.listadecomprasapp
 
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.Query // <-- IMPORTANTE
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -16,23 +17,29 @@ object ListasRepository {
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    // --- Funções de LISTAS (Completas com Lógica de Busca) ---
+    // --- Funções de LISTAS (Com Lógica de Busca Corrigida) ---
 
-    /**
-     * RF003 e RF005: Busca as listas do usuário, aplicando um filtro de busca
-     */
     suspend fun getMinhasListas(filtroDeBusca: String = ""): List<ListaDeCompras> {
         val userId = getUserId() ?: return emptyList()
         try {
-            var query = db.collection("listas")
+            // 1. CORREÇÃO: Declaramos 'query' como tipo 'Query'
+            //    e fazemos a primeira filtragem (que já tínhamos)
+            var query: Query = db.collection("listas")
                 .whereEqualTo("userId", userId)
 
             if (filtroDeBusca.isNotEmpty()) {
-                query = query.whereGreaterThanOrEqualTo("nome", filtroDeBusca)
-                    .whereLessThanOrEqualTo("nome", filtroDeBusca + '\uf8ff')
+                // --- 2. LÓGICA DE BUSCA COM FILTRO (RF005) ---
+                val filtroMinusculo = filtroDeBusca.lowercase()
+                query = query.whereGreaterThanOrEqualTo("nome_busca", filtroMinusculo)
+                    .whereLessThanOrEqualTo("nome_busca", filtroMinusculo + '\uf8ff')
+                    // A primeira ordenação DEVE ser no campo do filtro
+                    .orderBy("nome_busca")
+            } else {
+                // --- 3. LÓGICA DE BUSCA SEM FILTRO (A ANTIGA, RF003) ---
+                query = query.orderBy("nome")
             }
 
-            val task = query.orderBy("nome").get().await()
+            val task = query.get().await()
             return task.toObjects(ListaDeCompras::class.java)
         } catch (e: Exception) {
             println("Erro ao buscar listas: ${e.message}")
@@ -40,9 +47,37 @@ object ListasRepository {
         }
     }
 
-    /**
-     * Faz upload da imagem (Função completa)
-     */
+    // --- Funções de ITENS (Com Lógica de Busca Corrigida) ---
+
+    suspend fun getItensDaLista(listaId: String, filtroDeBusca: String = ""): List<ItemDaLista> {
+        try {
+            // 1. CORREÇÃO: Declaramos 'query' como tipo 'Query'
+            var query: Query = getCaminhoItens(listaId)
+
+            if (filtroDeBusca.isNotEmpty()) {
+                // --- 2. LÓGICA DE BUSCA COM FILTRO (RF005) ---
+                val filtroMinusculo = filtroDeBusca.lowercase()
+                query = query.whereGreaterThanOrEqualTo("nome_busca", filtroMinusculo)
+                    .whereLessThanOrEqualTo("nome_busca", filtroMinusculo + '\uf8ff')
+                    // A primeira ordenação DEVE ser no campo do filtro
+                    .orderBy("nome_busca")
+            } else {
+                // --- 3. LÓGICA DE BUSCA SEM FILTRO (A ANTIGA, RF004) ---
+                query = query.orderBy("comprado")
+                    .orderBy("categoria")
+                    .orderBy("nome")
+            }
+
+            val task = query.get().await()
+            return task.toObjects(ItemDaLista::class.java)
+        } catch (e: Exception) {
+            println("Erro ao buscar itens: ${e.message}")
+            return emptyList()
+        }
+    }
+
+    // --- DEMAIS FUNÇÕES (100% COMPLETAS, SEM ATALHOS) ---
+
     private suspend fun uploadImagemLista(uri: Uri): String {
         val userId = getUserId() ?: "unknown"
         val fileName = "listas/${userId}_${UUID.randomUUID()}.jpg"
@@ -51,9 +86,6 @@ object ListasRepository {
         return storageRef.downloadUrl.await().toString()
     }
 
-    /**
-     * Adiciona uma nova lista (Função completa)
-     */
     suspend fun adicionarLista(nome: String, uriLocal: Uri?) {
         val userId = getUserId() ?: return
         var downloadUrl: String? = null
@@ -68,11 +100,8 @@ object ListasRepository {
         db.collection("listas").add(novaLista).await()
     }
 
-    /**
-     * Exclui uma lista (Função completa)
-     */
     suspend fun excluirLista(lista: ListaDeCompras) {
-        excluirSubcolecaoItens(lista.id) // Exclui itens primeiro
+        excluirSubcolecaoItens(lista.id)
         val urlDaImagem = lista.imageUrl
         if (urlDaImagem != null) {
             try {
@@ -85,9 +114,6 @@ object ListasRepository {
         db.collection("listas").document(lista.id).delete().await()
     }
 
-    /**
-     * Exclui subcoleção de itens (Função completa)
-     */
     private suspend fun excluirSubcolecaoItens(listaId: String) {
         val snapshot = getCaminhoItens(listaId).get().await()
         val batch = db.batch()
@@ -97,9 +123,6 @@ object ListasRepository {
         batch.commit().await()
     }
 
-    /**
-     * Exclui uma imagem anterior (Função completa)
-     */
     private suspend fun excluirImagemAnterior(imageUrl: String?) {
         if (imageUrl == null) return
         try {
@@ -110,9 +133,6 @@ object ListasRepository {
         }
     }
 
-    /**
-     * Busca uma única lista pelo seu ID (Função completa)
-     */
     suspend fun getListaPorId(id: String): ListaDeCompras? {
         try {
             val doc = db.collection("listas").document(id).get().await()
@@ -123,9 +143,6 @@ object ListasRepository {
         }
     }
 
-    /**
-     * Atualiza uma lista (Função completa)
-     */
     suspend fun atualizarLista(
         id: String,
         novoNome: String,
@@ -137,48 +154,23 @@ object ListasRepository {
             novaUrlImagem = uploadImagemLista(novaUriLocal)
             excluirImagemAnterior(urlImagemAntiga)
         }
-        val dadosAtualizados = mapOf("nome" to novoNome, "imageUrl" to novaUrlImagem)
+
+        val dadosAtualizados = mapOf(
+            "nome" to novoNome,
+            "nome_busca" to novoNome.lowercase(),
+            "imageUrl" to novaUrlImagem
+        )
+
         db.collection("listas").document(id).update(dadosAtualizados).await()
     }
-
-    // --- Funções de ITENS (Completas com Lógica de Busca) ---
 
     private fun getCaminhoItens(listaId: String) =
         db.collection("listas").document(listaId).collection("itens")
 
-    /**
-     * RF004 e RF005: Busca todos os itens de uma lista, aplicando um filtro de busca
-     */
-    suspend fun getItensDaLista(listaId: String, filtroDeBusca: String = ""): List<ItemDaLista> {
-        try {
-            var query = getCaminhoItens(listaId)
-                .orderBy("comprado")
-                .orderBy("categoria")
-                .orderBy("nome")
-
-            if (filtroDeBusca.isNotEmpty()) {
-                query = query.whereGreaterThanOrEqualTo("nome", filtroDeBusca)
-                    .whereLessThanOrEqualTo("nome", filtroDeBusca + '\uf8ff')
-            }
-
-            val task = query.get().await()
-            return task.toObjects(ItemDaLista::class.java)
-        } catch (e: Exception) {
-            println("Erro ao buscar itens: ${e.message}")
-            return emptyList()
-        }
-    }
-
-    /**
-     * Adiciona um item (Função completa)
-     */
     suspend fun adicionarItem(listaId: String, item: ItemDaLista) {
         getCaminhoItens(listaId).add(item).await()
     }
 
-    /**
-     * Busca um item por ID (Função completa)
-     */
     suspend fun getItemPorId(listaId: String, itemId: String): ItemDaLista? {
         try {
             val doc = getCaminhoItens(listaId).document(itemId).get().await()
@@ -188,16 +180,10 @@ object ListasRepository {
         }
     }
 
-    /**
-     * Atualiza um item (Função completa)
-     */
     suspend fun atualizarItem(listaId: String, item: ItemDaLista) {
         getCaminhoItens(listaId).document(item.id).set(item).await()
     }
 
-    /**
-     * Exclui um item (Função completa)
-     */
     suspend fun excluirItem(listaId: String, itemId: String) {
         getCaminhoItens(listaId).document(itemId).delete().await()
     }
