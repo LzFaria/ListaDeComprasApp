@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 class ListasViewModel : ViewModel() {
 
     private val repository = ListasRepository
-    // 1. ADICIONADO: O "Gerente" de Autenticação
     private val authRepository = AuthRepository
 
     private val _listas = MutableLiveData<List<ListaDeCompras>>()
@@ -18,9 +17,6 @@ class ListasViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    /**
-     * Carrega as listas (Função completa)
-     */
     fun carregarListas(filtro: String = "") {
         viewModelScope.launch {
             try {
@@ -32,9 +28,6 @@ class ListasViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Exclui a lista (Função completa)
-     */
     fun excluirLista(lista: ListaDeCompras) {
         viewModelScope.launch {
             try {
@@ -46,10 +39,6 @@ class ListasViewModel : ViewModel() {
         }
     }
 
-    // --- 2. A FUNÇÃO QUE FALTAVA (RF001) ---
-    /**
-     * Pede ao "Gerente" de Autenticação para fazer o logout
-     */
     fun fazerLogout() {
         authRepository.fazerLogout()
     }

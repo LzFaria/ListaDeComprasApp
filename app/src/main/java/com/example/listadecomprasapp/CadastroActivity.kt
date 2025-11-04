@@ -11,7 +11,6 @@ class CadastroActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCadastroBinding
 
-    // 1. O Garçom (Activity) agora tem o contato do Chef (ViewModel)
     private val cadastroViewModel: CadastroViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +18,6 @@ class CadastroActivity : AppCompatActivity() {
         binding = ActivityCadastroBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 2. Configurar o Garçom para "observar" os quadros de aviso do Chef
         observarViewModel()
 
         // Configurar os botões
@@ -27,20 +25,17 @@ class CadastroActivity : AppCompatActivity() {
             fazerCadastro()
         }
 
-        // (Lógica do seu botão "Voltar" que você tinha adicionado)
+        // (Lógica do seu botão "Voltar")
         binding.textViewVoltarLogin.setOnClickListener {
             finish() // Simplesmente fecha esta tela
         }
     }
 
-    /**
-     * Configura os "observadores"
-     */
+    //Configura os "observadores"
     private fun observarViewModel() {
         // Observa o quadro de SUCESSO
         cadastroViewModel.cadastroResult.observe(this) { firebaseUser ->
             if (firebaseUser != null) {
-                // O Chef avisou que o cadastro deu certo!
                 Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show()
                 finish() // Fecha a tela de Cadastro e volta pro Login
             }
@@ -55,17 +50,13 @@ class CadastroActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Função chamada pelo clique do botão "Criar"
-     */
+    //Função chamada pelo clique do botão "Criar"
     private fun fazerCadastro() {
-        // 1. Coletar os dados (igual a antes)
         val nome = binding.editTextNomeCompleto.text.toString()
         val email = binding.editTextEmailCadastro.text.toString()
         val senha = binding.editTextSenhaCadastro.text.toString()
         val confirmarSenha = binding.editTextConfirmarSenha.text.toString()
 
-        // 2. Validações locais (RF002) - igual a antes
         if (nome.isEmpty() || email.isEmpty() || senha.isEmpty() || confirmarSenha.isEmpty()) {
             Toast.makeText(this, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
             return
@@ -83,9 +74,6 @@ class CadastroActivity : AppCompatActivity() {
             return
         }
 
-        // 3. MUDANÇA CRUCIAL:
-        // O Garçom entrega o pedido ao Chef.
-        // REMOVEMOS: a chamada para GerenciadorDeDados.adicionarUsuario(...)
         cadastroViewModel.cadastrar(nome, email, senha)
     }
 }

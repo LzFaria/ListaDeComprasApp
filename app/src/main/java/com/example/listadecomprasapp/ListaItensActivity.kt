@@ -37,7 +37,6 @@ class ListaItensActivity : AppCompatActivity() {
         setupRecyclerViewInicial()
         observarViewModel()
 
-        // --- 1. CORREÇÃO AQUI (Preenchendo os listeners) ---
         binding.fabAdicionarItem.setOnClickListener {
             val intent = Intent(this, AdicionarItemActivity::class.java)
             intent.putExtra("LISTA_ID", idDaListaAtual)
@@ -47,7 +46,7 @@ class ListaItensActivity : AppCompatActivity() {
             abrirTelaDeEdicaoLista()
         }
 
-        // --- Listener da Busca (Correto) ---
+        // --- Listener da Busca ---
         binding.searchViewItens.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -59,10 +58,8 @@ class ListaItensActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Atualiza o nome da lista (caso tenha mudado na tela de edição)
+
         if (idDaListaAtual != null) {
-            // TODO: Esta lógica ainda usa GerenciadorDeDados,
-            // precisamos refatorar 'abrirTelaDeEdicaoLista'
             val lista = GerenciadorDeDados.encontrarListaPorId(idDaListaAtual!!)
             if (lista != null) {
                 nomeDaListaAtual = lista.nome
@@ -87,13 +84,13 @@ class ListaItensActivity : AppCompatActivity() {
     private fun setupRecyclerViewInicial() {
         adapter = ItensAdapter(
             emptyList(),
-            { item, isChecked -> // Checkbox
+            { item, isChecked ->
                 viewModel.atualizarItemComprado(idDaListaAtual!!, item, isChecked)
             },
-            { itemClicado -> // Clique Longo
+            { itemClicado ->
                 mostrarDialogoDeExclusao(itemClicado)
             },
-            { itemClicado -> // Clique Simples
+            { itemClicado ->
                 abrirTelaDeEdicaoItem(itemClicado)
             }
         )
@@ -101,7 +98,6 @@ class ListaItensActivity : AppCompatActivity() {
         binding.recyclerViewItens.adapter = adapter
     }
 
-    // --- Funções de Diálogo e Navegação (100% COMPLETAS) ---
     private fun mostrarDialogoDeExclusao(item: ItemDaLista) {
         AlertDialog.Builder(this)
             .setTitle("Excluir Item")

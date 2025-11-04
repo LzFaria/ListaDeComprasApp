@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.listadecomprasapp.databinding.ItemItemListaBinding
 
 class ItensAdapter(
-    // 1. MUDANÇA: 'itens' agora é uma 'var' para atualização
     private var itens: List<ItemDaLista>,
     private val onItemCheckedChange: (ItemDaLista, Boolean) -> Unit,
     private val onItemLongClick: (ItemDaLista) -> Unit,
@@ -20,12 +19,9 @@ class ItensAdapter(
             binding.textViewNomeItem.text = item.nome
             binding.textViewQtdUnidade.text = "${item.quantidade} ${item.unidade}"
 
-            // 2. MUDANÇA: Lidar com o 'comprado' e listeners
-            // Removemos o listener antigo para evitar loops
             binding.checkBoxComprado.setOnCheckedChangeListener(null)
             binding.checkBoxComprado.isChecked = item.comprado
 
-            // 3. MUDANÇA: Define o ícone com base no NOME (String) da categoria
             val icone = when (item.categoria) {
                 Categoria.FRUTA.nome -> R.drawable.ic_fruta
                 Categoria.VERDURA.nome -> R.drawable.ic_verdura
@@ -36,12 +32,10 @@ class ItensAdapter(
 
             atualizarVisualizacaoComprado(item.comprado)
 
-            // 4. MUDANÇA: Novo listener para o CheckBox
             binding.checkBoxComprado.setOnCheckedChangeListener { _, isChecked ->
                 onItemCheckedChange(item, isChecked)
             }
 
-            // Listeners de clique (sem mudanças)
             itemView.setOnLongClickListener {
                 onItemLongClick(item)
                 true
@@ -62,13 +56,11 @@ class ItensAdapter(
         }
     }
 
-    // 5. NOVA FUNÇÃO: Para atualizar a lista (ex: filtro)
     fun atualizarItens(novosItens: List<ItemDaLista>) {
         this.itens = novosItens
         notifyDataSetChanged()
     }
 
-    // --- Funções Padrão (completas) ---
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val binding = ItemItemListaBinding.inflate(
             LayoutInflater.from(parent.context),

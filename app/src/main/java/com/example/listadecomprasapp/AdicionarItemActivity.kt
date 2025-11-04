@@ -25,7 +25,6 @@ class AdicionarItemActivity : AppCompatActivity() {
         binding = ActivityAdicionarItemBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // --- 1. AQUI ESTÁ A CORREÇÃO ---
         // Chamar as funções para popular AMBOS os spinners
         setupSpinnerUnidades()
         setupSpinnerCategoria()
@@ -122,11 +121,6 @@ class AdicionarItemActivity : AppCompatActivity() {
             viewModel.salvarItem(listaId!!, novoItem)
         }
     }
-
-    // --- 2. A FUNÇÃO QUE FALTAVA ---
-    /**
-     * Configura o Spinner (dropdown) com as unidades de medida
-     */
     private fun setupSpinnerUnidades() {
         val unidades = listOf("un", "kg", "g", "L", "mL", "pct")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, unidades)

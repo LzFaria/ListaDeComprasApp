@@ -29,7 +29,6 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // --- 1. NOVO LISTENER (RF001) ---
         binding.textViewRecuperarSenha.setOnClickListener {
             mostrarDialogoRecuperarSenha()
         }
@@ -37,9 +36,6 @@ class LoginActivity : AppCompatActivity() {
         observarViewModel()
     }
 
-    /**
-     * 2. MUDANÇA: Agora também observa o 'resetEnviado'
-     */
     private fun observarViewModel() {
         // Observa o sucesso do LOGIN
         loginViewModel.loginResult.observe(this) { firebaseUser ->
@@ -57,8 +53,6 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
         }
-
-        // --- 3. NOVO OBSERVADOR (RF001) ---
         // Observa o sucesso da RECUPERAÇÃO DE SENHA
         loginViewModel.resetEnviado.observe(this) { enviado ->
             if (enviado) {
@@ -68,36 +62,27 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun fazerLogin() {
-        // ... (Lógica de validação do login, sem mudanças)
+        // Lógica de validação do login
         val email = binding.editTextEmail.text.toString()
         val senha = binding.editTextSenha.text.toString()
         if (email.isEmpty() || senha.isEmpty()) { /* ... */ }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { /* ... */ }
 
-        // Chama o Chef (sem mudanças)
         loginViewModel.login(email, senha)
     }
 
-    // --- 4. NOVA FUNÇÃO (RF001) ---
-    /**
-     * Mostra um pop-up (AlertDialog) pedindo o e-mail do usuário
-     * para iniciar a recuperação de senha.
-     */
     private fun mostrarDialogoRecuperarSenha() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Recuperar Senha")
         builder.setMessage("Por favor, insira seu e-mail para receber o link de recuperação:")
 
-        // Adiciona um campo de texto (EditText) dentro do pop-up
         val input = EditText(this)
         input.inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         builder.setView(input)
 
-        // Configura o botão "Enviar"
         builder.setPositiveButton("Enviar") { dialog, _ ->
             val email = input.text.toString()
             if (email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                // Se o e-mail for válido, pede ao "Chef" (ViewModel)
                 loginViewModel.recuperarSenha(email)
                 dialog.dismiss()
             } else {
@@ -105,7 +90,6 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Configura o botão "Cancelar"
         builder.setNegativeButton("Cancelar") { dialog, _ ->
             dialog.cancel()
         }

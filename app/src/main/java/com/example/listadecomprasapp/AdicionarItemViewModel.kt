@@ -5,8 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-
-// O "Chef de Cozinha" da tela AdicionarItemActivity
 class AdicionarItemViewModel : ViewModel() {
 
     private val repository = ListasRepository
@@ -37,12 +35,11 @@ class AdicionarItemViewModel : ViewModel() {
         }
     }
 
-    // Esta função estava dando "Unresolved reference"
     fun atualizarItem(listaId: String, item: ItemDaLista) {
         _loading.postValue(true)
         viewModelScope.launch {
             try {
-                repository.atualizarItem(listaId, item) // Agora deve encontrar
+                repository.atualizarItem(listaId, item)
                 _concluido.postValue(true)
             } catch (e: Exception) {
                 _error.postValue(e.message)
@@ -52,7 +49,6 @@ class AdicionarItemViewModel : ViewModel() {
         }
     }
 
-    // Esta função estava dando "Unresolved reference"
     fun carregarItem(listaId: String, itemId: String) {
         _loading.postValue(true)
         viewModelScope.launch {

@@ -12,7 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import coil.load // Importe o Coil
+import coil.load
 import com.example.listadecomprasapp.databinding.ActivityAdicionarListaBinding
 import java.io.File
 

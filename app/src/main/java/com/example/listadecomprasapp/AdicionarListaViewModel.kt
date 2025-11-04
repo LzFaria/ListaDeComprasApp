@@ -11,7 +11,6 @@ class AdicionarListaViewModel : ViewModel() {
 
     private val repository = ListasRepository
 
-    // --- Quadro de avisos (sem mudanças) ---
     private val _concluido = MutableLiveData<Boolean>(false)
     val concluido: LiveData<Boolean> = _concluido
     private val _error = MutableLiveData<String>()
@@ -19,14 +18,11 @@ class AdicionarListaViewModel : ViewModel() {
     private val _loading = MutableLiveData<Boolean>(false)
     val loading: LiveData<Boolean> = _loading
 
-    // --- 1. NOVO QUADRO DE AVISOS ---
-    // Para entregar ao Garçom (Activity) a lista que ele precisa editar
     private val _listaParaEditar = MutableLiveData<ListaDeCompras?>()
     val listaParaEditar: LiveData<ListaDeCompras?> = _listaParaEditar
 
-    /**
-     * Salva uma NOVA lista (Sem mudanças)
-     */
+    //Salva uma NOVA lista (Sem mudanças)
+
     fun salvarLista(nome: String, uriLocal: Uri?) {
         _loading.postValue(true)
         viewModelScope.launch {
@@ -41,11 +37,7 @@ class AdicionarListaViewModel : ViewModel() {
         }
     }
 
-    // --- 2. NOVAS FUNÇÕES ---
-
-    /**
-     * Busca os dados da lista que o usuário quer editar
-     */
+    //Busca os dados da lista que o usuário quer editar
     fun carregarLista(id: String) {
         _loading.postValue(true)
         viewModelScope.launch {
@@ -62,9 +54,7 @@ class AdicionarListaViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Salva as MUDANÇAS de uma lista existente
-     */
+    //Salva as MUDANÇAS de uma lista existente
     fun atualizarLista(
         id: String,
         novoNome: String,

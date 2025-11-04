@@ -17,25 +17,19 @@ object ListasRepository {
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
-    // --- Funções de LISTAS (Com Lógica de Busca Corrigida) ---
 
     suspend fun getMinhasListas(filtroDeBusca: String = ""): List<ListaDeCompras> {
         val userId = getUserId() ?: return emptyList()
         try {
-            // 1. CORREÇÃO: Declaramos 'query' como tipo 'Query'
-            //    e fazemos a primeira filtragem (que já tínhamos)
             var query: Query = db.collection("listas")
                 .whereEqualTo("userId", userId)
 
             if (filtroDeBusca.isNotEmpty()) {
-                // --- 2. LÓGICA DE BUSCA COM FILTRO (RF005) ---
                 val filtroMinusculo = filtroDeBusca.lowercase()
                 query = query.whereGreaterThanOrEqualTo("nome_busca", filtroMinusculo)
                     .whereLessThanOrEqualTo("nome_busca", filtroMinusculo + '\uf8ff')
-                    // A primeira ordenação DEVE ser no campo do filtro
                     .orderBy("nome_busca")
             } else {
-                // --- 3. LÓGICA DE BUSCA SEM FILTRO (A ANTIGA, RF003) ---
                 query = query.orderBy("nome")
             }
 
@@ -47,22 +41,21 @@ object ListasRepository {
         }
     }
 
-    // --- Funções de ITENS (Com Lógica de Busca Corrigida) ---
+    // --- Funções de ITENS ---
 
     suspend fun getItensDaLista(listaId: String, filtroDeBusca: String = ""): List<ItemDaLista> {
         try {
-            // 1. CORREÇÃO: Declaramos 'query' como tipo 'Query'
             var query: Query = getCaminhoItens(listaId)
 
             if (filtroDeBusca.isNotEmpty()) {
-                // --- 2. LÓGICA DE BUSCA COM FILTRO (RF005) ---
+                // --- LÓGICA DE BUSCA COM FILTRO ---
                 val filtroMinusculo = filtroDeBusca.lowercase()
                 query = query.whereGreaterThanOrEqualTo("nome_busca", filtroMinusculo)
                     .whereLessThanOrEqualTo("nome_busca", filtroMinusculo + '\uf8ff')
                     // A primeira ordenação DEVE ser no campo do filtro
                     .orderBy("nome_busca")
             } else {
-                // --- 3. LÓGICA DE BUSCA SEM FILTRO (A ANTIGA, RF004) ---
+                // --- LÓGICA DE BUSCA SEM FILTRO ---
                 query = query.orderBy("comprado")
                     .orderBy("categoria")
                     .orderBy("nome")
@@ -75,8 +68,6 @@ object ListasRepository {
             return emptyList()
         }
     }
-
-    // --- DEMAIS FUNÇÕES (100% COMPLETAS, SEM ATALHOS) ---
 
     private suspend fun uploadImagemLista(uri: Uri): String {
         val userId = getUserId() ?: "unknown"

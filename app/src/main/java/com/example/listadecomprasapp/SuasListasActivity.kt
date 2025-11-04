@@ -17,8 +17,7 @@ class SuasListasActivity : AppCompatActivity() {
     private val listasViewModel: ListasViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // --- AQUI ESTÁ A CORREÇÃO DO CRASH ---
-        super.onCreate(savedInstanceState) // Esta linha é OBRIGATÓRIA
+        super.onCreate(savedInstanceState)
 
         binding = ActivitySuasListasBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -26,7 +25,6 @@ class SuasListasActivity : AppCompatActivity() {
         setupRecyclerViewInicial()
         observarViewModel()
 
-        // --- Configuração dos Botões ---
         binding.fabAdicionarLista.setOnClickListener {
             val intent = Intent(this, AdicionarListaActivity::class.java)
             startActivity(intent)
@@ -81,7 +79,7 @@ class SuasListasActivity : AppCompatActivity() {
         binding.recyclerViewListas.adapter = adapter
     }
 
-    // --- Funções de Diálogo e Logout (100% COMPLETAS) ---
+    // --- Funções de Diálogo e Logout
 
     private fun mostrarDialogoOpcoesLista(lista: ListaDeCompras) {
         val opcoes = arrayOf("Editar", "Excluir")
