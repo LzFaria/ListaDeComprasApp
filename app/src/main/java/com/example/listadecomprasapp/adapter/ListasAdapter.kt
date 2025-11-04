@@ -1,9 +1,11 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.adapter
 
+import android.R
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.listadecomprasapp.data.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ItemListaBinding
 
 class ListasAdapter(
@@ -20,11 +22,11 @@ class ListasAdapter(
             if (lista.imageUrl != null) {
                 binding.imageViewLista.load(lista.imageUrl) {
                     crossfade(true)
-                    placeholder(android.R.drawable.ic_menu_gallery)
-                    error(android.R.drawable.ic_menu_close_clear_cancel)
+                    placeholder(R.drawable.ic_menu_gallery)
+                    error(R.drawable.ic_menu_close_clear_cancel)
                 }
             } else {
-                binding.imageViewLista.setImageResource(android.R.drawable.ic_menu_gallery)
+                binding.imageViewLista.setImageResource(R.drawable.ic_menu_gallery)
             }
 
             itemView.setOnClickListener {

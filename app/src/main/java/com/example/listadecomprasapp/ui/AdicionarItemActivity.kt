@@ -1,11 +1,15 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.ui
 
+import android.R
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.listadecomprasapp.viewmodel.AdicionarItemViewModel
+import com.example.listadecomprasapp.data.Categoria
+import com.example.listadecomprasapp.data.ItemDaLista
 import com.example.listadecomprasapp.databinding.ActivityAdicionarItemBinding
 
 class AdicionarItemActivity : AppCompatActivity() {
@@ -123,17 +127,17 @@ class AdicionarItemActivity : AppCompatActivity() {
     }
     private fun setupSpinnerUnidades() {
         val unidades = listOf("un", "kg", "g", "L", "mL", "pct")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, unidades)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val adapter = ArrayAdapter(this, R.layout.simple_spinner_item, unidades)
+        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
         binding.spinnerUnidade.adapter = adapter
     }
 
     private fun setupSpinnerCategoria() {
         val adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_item,
+            this, R.layout.simple_spinner_item,
             categorias
         )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
         binding.spinnerCategoria.adapter = adapter
     }
 

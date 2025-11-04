@@ -1,10 +1,10 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.ui
 
 import android.Manifest
+import android.R
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.load
+import com.example.listadecomprasapp.viewmodel.AdicionarListaViewModel
+import com.example.listadecomprasapp.data.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ActivityAdicionarListaBinding
 import java.io.File
 
@@ -161,7 +163,7 @@ class AdicionarListaActivity : AppCompatActivity() {
             // Usa a Coil para carregar a URL do Firebase na ImageView
             binding.imageViewPreview.load(lista.imageUrl) {
                 crossfade(true)
-                placeholder(android.R.drawable.ic_menu_gallery)
+                placeholder(R.drawable.ic_menu_gallery)
             }
         }
     }

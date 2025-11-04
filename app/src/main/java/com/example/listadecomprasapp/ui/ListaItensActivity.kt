@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.ui
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,7 +8,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.listadecomprasapp.data.ItemDaLista
+import com.example.listadecomprasapp.adapter.ItensAdapter
 import com.example.listadecomprasapp.databinding.ActivityListaItensBinding
+import com.example.listadecomprasapp.viewmodel.ListaItensViewModel
 
 class ListaItensActivity : AppCompatActivity() {
 

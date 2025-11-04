@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.data
 
 data class Usuario(
     val nome: String,

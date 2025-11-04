@@ -1,5 +1,6 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.data
 
+import android.net.Uri
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.Exclude
 
@@ -16,5 +17,5 @@ data class ListaDeCompras(
     var imageUrl: String? = null
 ) {
     @get:Exclude
-    var imagemUriLocal: android.net.Uri? = null
+    var imagemUriLocal: Uri? = null
 }

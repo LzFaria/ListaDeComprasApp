@@ -1,9 +1,10 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.listadecomprasapp.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 

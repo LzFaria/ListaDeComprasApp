@@ -1,13 +1,16 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.util.Patterns
-import android.widget.EditText // <-- NOVO IMPORT
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog // <-- NOVO IMPORT
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.listadecomprasapp.viewmodel.LoginViewModel
+import com.example.listadecomprasapp.ui.SuasListasActivity
 import com.example.listadecomprasapp.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
@@ -77,7 +80,7 @@ class LoginActivity : AppCompatActivity() {
         builder.setMessage("Por favor, insira seu e-mail para receber o link de recuperação:")
 
         val input = EditText(this)
-        input.inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        input.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         builder.setView(input)
 
         builder.setPositiveButton("Enviar") { dialog, _ ->

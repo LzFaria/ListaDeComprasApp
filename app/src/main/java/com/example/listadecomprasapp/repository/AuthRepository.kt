@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser

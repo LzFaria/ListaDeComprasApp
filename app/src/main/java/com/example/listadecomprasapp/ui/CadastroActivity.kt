@@ -1,10 +1,11 @@
-package com.example.listadecomprasapp
+package com.example.listadecomprasapp.ui
 
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.viewModels // <-- NOVO IMPORT
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.listadecomprasapp.viewmodel.CadastroViewModel
 import com.example.listadecomprasapp.databinding.ActivityCadastroBinding
 
 class CadastroActivity : AppCompatActivity() {
