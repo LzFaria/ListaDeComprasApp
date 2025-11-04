@@ -13,7 +13,6 @@ import com.example.listadecomprasapp.databinding.ActivityListaItensBinding
 class ListaItensActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityListaItensBinding
-    private var nomeDaListaAtual: String? = null
     private var idDaListaAtual: String? = null
     private lateinit var adapter: ItensAdapter
     private val viewModel: ListaItensViewModel by viewModels()
@@ -23,16 +22,13 @@ class ListaItensActivity : AppCompatActivity() {
         binding = ActivityListaItensBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        nomeDaListaAtual = intent.getStringExtra("NOME_DA_LISTA")
         idDaListaAtual = intent.getStringExtra("LISTA_ID")
 
-        if (nomeDaListaAtual == null || idDaListaAtual == null) {
-            Toast.makeText(this, "Erro: Lista não encontrada", Toast.LENGTH_SHORT).show()
+        if (idDaListaAtual == null) {
+            Toast.makeText(this, "Erro: ID da Lista não encontrado", Toast.LENGTH_SHORT).show()
             finish();
             return
         }
-
-        binding.textViewTituloListaDinamico.text = nomeDaListaAtual
 
         setupRecyclerViewInicial()
         observarViewModel()
@@ -42,6 +38,7 @@ class ListaItensActivity : AppCompatActivity() {
             intent.putExtra("LISTA_ID", idDaListaAtual)
             startActivity(intent)
         }
+
         binding.imageButtonEditList.setOnClickListener {
             abrirTelaDeEdicaoLista()
         }
@@ -58,22 +55,23 @@ class ListaItensActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (idDaListaAtual == null) return
 
-        if (idDaListaAtual != null) {
-            val lista = GerenciadorDeDados.encontrarListaPorId(idDaListaAtual!!)
-            if (lista != null) {
-                nomeDaListaAtual = lista.nome
-                binding.textViewTituloListaDinamico.text = nomeDaListaAtual
-            }
-        }
-        binding.searchViewItens.setQuery("", false)
+        viewModel.carregarNomeDaLista(idDaListaAtual!!)
         viewModel.carregarItens(idDaListaAtual!!)
+
+        binding.searchViewItens.setQuery("", false)
     }
 
     private fun observarViewModel() {
         viewModel.itens.observe(this) { itens ->
             adapter.atualizarItens(itens)
         }
+
+        viewModel.nomeDaLista.observe(this) { nome ->
+            binding.textViewTituloListaDinamico.text = nome
+        }
+
         viewModel.error.observe(this) { error ->
             if (error.isNotEmpty()) {
                 Toast.makeText(this, error, Toast.LENGTH_LONG).show()
@@ -81,16 +79,17 @@ class ListaItensActivity : AppCompatActivity() {
         }
     }
 
+    // setupRecyclerViewInicial
     private fun setupRecyclerViewInicial() {
         adapter = ItensAdapter(
             emptyList(),
-            { item, isChecked ->
+            { item, isChecked -> // Checkbox
                 viewModel.atualizarItemComprado(idDaListaAtual!!, item, isChecked)
             },
-            { itemClicado ->
+            { itemClicado -> // Clique Longo
                 mostrarDialogoDeExclusao(itemClicado)
             },
-            { itemClicado ->
+            { itemClicado -> // Clique Simples
                 abrirTelaDeEdicaoItem(itemClicado)
             }
         )
@@ -98,6 +97,7 @@ class ListaItensActivity : AppCompatActivity() {
         binding.recyclerViewItens.adapter = adapter
     }
 
+    // --- Funções de Diálogo e Navegação ---
     private fun mostrarDialogoDeExclusao(item: ItemDaLista) {
         AlertDialog.Builder(this)
             .setTitle("Excluir Item")

@@ -16,12 +16,32 @@ class ListaItensViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
+    private val _nomeDaLista = MutableLiveData<String>()
+    val nomeDaLista: LiveData<String> = _nomeDaLista
+
     fun carregarItens(listaId: String, filtro: String = "") {
         viewModelScope.launch {
             try {
                 _itens.postValue(repository.getItensDaLista(listaId, filtro))
             } catch (e: Exception) {
-                _error.postValue(e.message)
+                _error.postValue("Falha ao carregar itens: ${e.message}")
+            }
+        }
+    }
+
+    fun carregarNomeDaLista(listaId: String) {
+        viewModelScope.launch {
+            try {
+                // Pede ao "Gerente"
+                val lista = repository.getListaPorId(listaId)
+                if (lista != null) {
+                    // Avisa no quadro de avisos qual é o nome
+                    _nomeDaLista.postValue(lista.nome)
+                } else {
+                    _error.postValue("Lista não encontrada")
+                }
+            } catch (e: Exception) {
+                _error.postValue("Falha ao carregar dados da lista: ${e.message}")
             }
         }
     }
