@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 class ListasViewModel : ViewModel() {
 
     private val repository = ListasRepository
+    // 1. ADICIONADO: O "Gerente" de Autenticação
+    private val authRepository = AuthRepository
 
     private val _listas = MutableLiveData<List<ListaDeCompras>>()
     val listas: LiveData<List<ListaDeCompras>> = _listas
@@ -17,13 +19,11 @@ class ListasViewModel : ViewModel() {
     val error: LiveData<String> = _error
 
     /**
-     * RF003 e RF005: Carrega as listas, agora passando o filtro.
-     * Se o filtro estiver vazio, busca todas.
+     * Carrega as listas (Função completa)
      */
     fun carregarListas(filtro: String = "") {
         viewModelScope.launch {
             try {
-                // Passa o filtro para o Gerente
                 val minhasListas = repository.getMinhasListas(filtro)
                 _listas.postValue(minhasListas)
             } catch (e: Exception) {
@@ -33,16 +33,24 @@ class ListasViewModel : ViewModel() {
     }
 
     /**
-     * Exclui a lista e recarrega a lista (agora sem filtro)
+     * Exclui a lista (Função completa)
      */
     fun excluirLista(lista: ListaDeCompras) {
         viewModelScope.launch {
             try {
                 repository.excluirLista(lista)
-                carregarListas() // Recarrega a lista completa
+                carregarListas() // Recarrega a lista
             } catch (e: Exception) {
                 _error.postValue("Falha ao excluir lista: ${e.message}")
             }
         }
+    }
+
+    // --- 2. A FUNÇÃO QUE FALTAVA (RF001) ---
+    /**
+     * Pede ao "Gerente" de Autenticação para fazer o logout
+     */
+    fun fazerLogout() {
+        authRepository.fazerLogout()
     }
 }

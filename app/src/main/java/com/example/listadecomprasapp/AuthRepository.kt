@@ -2,8 +2,8 @@ package com.example.listadecomprasapp
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.ktx.firestore // <-- NOVO IMPORT
-import com.google.firebase.ktx.Firebase // <-- NOVO IMPORT
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
 // Nosso "Gerente da Cozinha" de Autenticação e Dados do Usuário
@@ -32,25 +32,32 @@ object AuthRepository {
     }
 
     /**
-     * RF002: Salva o nome e email do usuário no Firestore,
-     * usando o UID do usuário como chave do documento.
+     * RF002: Salva o nome do usuário no Firestore. (Sem mudanças)
      */
     suspend fun salvarNomeUsuario(user: FirebaseUser, nome: String) {
-        // 1. Criar o "molde" dos dados (um Mapa)
         val dadosDoUsuario = hashMapOf(
             "nome" to nome,
             "email" to user.email
         )
-
-        // 2. Salvar no Firestore:
-        // Vá até a coleção "usuarios"
-        // Crie/Acesse um documento com o ID (uid) do usuário
-        // E salve (set) os 'dadosDoUsuario' dentro dele
         db.collection("usuarios")
             .document(user.uid)
             .set(dadosDoUsuario)
-            .await() // Espera a operação terminar
+            .await()
     }
 
-    // TODO: Adicionar o logout depois
+    // --- 1. NOVAS FUNÇÕES ---
+
+    /**
+     * RF001: Envia um e-mail de recuperação de senha.
+     */
+    suspend fun recuperarSenha(email: String) {
+        auth.sendPasswordResetEmail(email).await()
+    }
+
+    /**
+     * RF001: Faz o logout do usuário atual do Firebase.
+     */
+    fun fazerLogout() {
+        auth.signOut()
+    }
 }

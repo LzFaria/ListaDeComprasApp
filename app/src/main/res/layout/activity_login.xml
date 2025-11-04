@@ -68,4 +68,12 @@
         android:text="Criar Conta"
         android:textColor="@android:color/holo_blue_dark" />
 
+    <TextView
+        android:id="@+id/textViewRecuperarSenha"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Esqueci minha senha"
+        android:textColor="@android:color/holo_blue_dark" />
+
 </LinearLayout>

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
+// O "Chef de Cozinha" da tela ListaItensActivity
 class ListaItensViewModel : ViewModel() {
 
     private val repository = ListasRepository
@@ -17,12 +18,11 @@ class ListaItensViewModel : ViewModel() {
     val error: LiveData<String> = _error
 
     /**
-     * RF004 e RF005: Carrega os itens, agora passando o filtro.
+     * Carrega os itens (com ou sem filtro de busca)
      */
     fun carregarItens(listaId: String, filtro: String = "") {
         viewModelScope.launch {
             try {
-                // Passa o ID da lista E o filtro para o Gerente
                 _itens.postValue(repository.getItensDaLista(listaId, filtro))
             } catch (e: Exception) {
                 _error.postValue(e.message)
@@ -31,14 +31,14 @@ class ListaItensViewModel : ViewModel() {
     }
 
     /**
-     * Atualiza o item e recarrega a lista (agora sem filtro)
+     * Atualiza o status "comprado" de um item
      */
     fun atualizarItemComprado(listaId: String, item: ItemDaLista, comprado: Boolean) {
         viewModelScope.launch {
             try {
                 item.comprado = comprado
                 repository.atualizarItem(listaId, item)
-                carregarItens(listaId) // Recarrega a lista completa
+                carregarItens(listaId) // Recarrega a lista para mostrar a ordenação
             } catch (e: Exception) {
                 _error.postValue(e.message)
             }
@@ -46,13 +46,13 @@ class ListaItensViewModel : ViewModel() {
     }
 
     /**
-     * Exclui o item e recarrega a lista (agora sem filtro)
+     * Exclui um item
      */
     fun excluirItem(listaId: String, itemId: String) {
         viewModelScope.launch {
             try {
                 repository.excluirItem(listaId, itemId)
-                carregarItens(listaId) // Recarrega
+                carregarItens(listaId) // Recarrega a lista
             } catch (e: Exception) {
                 _error.postValue(e.message)
             }

@@ -17,14 +17,16 @@ class SuasListasActivity : AppCompatActivity() {
     private val listasViewModel: ListasViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        // --- AQUI ESTÁ A CORREÇÃO DO CRASH ---
+        super.onCreate(savedInstanceState) // Esta linha é OBRIGATÓRIA
+
         binding = ActivitySuasListasBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setupRecyclerViewInicial()
         observarViewModel()
 
-        // --- 1. CORREÇÃO AQUI (Preenchendo os listeners) ---
+        // --- Configuração dos Botões ---
         binding.fabAdicionarLista.setOnClickListener {
             val intent = Intent(this, AdicionarListaActivity::class.java)
             startActivity(intent)
@@ -33,7 +35,7 @@ class SuasListasActivity : AppCompatActivity() {
             mostrarDialogoLogout()
         }
 
-        // --- Listener da Busca (Correto) ---
+        // --- Listener da Busca ---
         binding.searchViewListas.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -45,7 +47,9 @@ class SuasListasActivity : AppCompatActivity() {
 
     private fun observarViewModel() {
         listasViewModel.listas.observe(this) { listas ->
-            adapter.atualizarListas(listas)
+            if (::adapter.isInitialized) {
+                adapter.atualizarListas(listas)
+            }
         }
         listasViewModel.error.observe(this) { errorMsg ->
             if (errorMsg.isNotEmpty()) {
@@ -55,7 +59,7 @@ class SuasListasActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        super.onResume()
+        super.onResume() // Esta também é obrigatória
         binding.searchViewListas.setQuery("", false)
         listasViewModel.carregarListas()
     }
@@ -78,6 +82,7 @@ class SuasListasActivity : AppCompatActivity() {
     }
 
     // --- Funções de Diálogo e Logout (100% COMPLETAS) ---
+
     private fun mostrarDialogoOpcoesLista(lista: ListaDeCompras) {
         val opcoes = arrayOf("Editar", "Excluir")
         AlertDialog.Builder(this)
@@ -118,8 +123,9 @@ class SuasListasActivity : AppCompatActivity() {
             .setTitle("Sair")
             .setMessage("Tem certeza que deseja sair?")
             .setPositiveButton("Sair") { dialog, _ ->
-                // TODO: Chamar o AuthRepository.logout()
-                GerenciadorDeDados.fazerLogout()
+
+                listasViewModel.fazerLogout()
+
                 val intent = Intent(this, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
