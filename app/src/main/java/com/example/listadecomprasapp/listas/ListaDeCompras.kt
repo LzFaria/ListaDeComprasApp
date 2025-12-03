@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp.data
+package com.example.listadecomprasapp.listas
 
 import android.net.Uri
 import com.google.firebase.firestore.DocumentId

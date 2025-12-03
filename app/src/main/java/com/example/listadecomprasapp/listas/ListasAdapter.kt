@@ -1,11 +1,11 @@
-package com.example.listadecomprasapp.adapter
+package com.example.listadecomprasapp.listas
 
 import android.R
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.example.listadecomprasapp.data.ListaDeCompras
+import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ItemListaBinding
 
 class ListasAdapter(

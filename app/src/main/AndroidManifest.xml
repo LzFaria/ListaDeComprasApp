@@ -16,18 +16,18 @@
         tools:targetApi="31">
 
         <activity
-            android:name=".ui.LoginActivity"
+            android:name=".auth.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.CadastroActivity" />
-        <activity android:name=".ui.SuasListasActivity" />
-        <activity android:name=".ui.AdicionarListaActivity" />
-        <activity android:name=".ui.ListaItensActivity" />
-        <activity android:name=".ui.AdicionarItemActivity" />
+        <activity android:name=".auth.CadastroActivity" />
+        <activity android:name=".listas.SuasListasActivity" />
+        <activity android:name=".listas.AdicionarListaActivity" />
+        <activity android:name=".itens.ListaItensActivity" />
+        <activity android:name=".itens.AdicionarItemActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

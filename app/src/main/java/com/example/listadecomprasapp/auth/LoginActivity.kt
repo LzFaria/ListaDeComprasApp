@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp.ui
+package com.example.listadecomprasapp.auth
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,9 +9,10 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.listadecomprasapp.viewmodel.LoginViewModel
-import com.example.listadecomprasapp.ui.SuasListasActivity
 import com.example.listadecomprasapp.databinding.ActivityLoginBinding
+import com.example.listadecomprasapp.auth.CadastroActivity
+import com.example.listadecomprasapp.listas.SuasListasActivity
+import com.example.listadecomprasapp.auth.LoginViewModel
 
 class LoginActivity : AppCompatActivity() {
 

@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp.ui
+package com.example.listadecomprasapp.listas
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,12 +8,13 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.listadecomprasapp.ui.AdicionarListaActivity
-import com.example.listadecomprasapp.data.ListaDeCompras
-import com.example.listadecomprasapp.ui.ListaItensActivity
-import com.example.listadecomprasapp.adapter.ListasAdapter
-import com.example.listadecomprasapp.viewmodel.ListasViewModel
+import com.example.listadecomprasapp.listas.ListasAdapter
+import com.example.listadecomprasapp.auth.LoginActivity
+import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ActivitySuasListasBinding
+import com.example.listadecomprasapp.listas.AdicionarListaActivity
+import com.example.listadecomprasapp.itens.ListaItensActivity
+import com.example.listadecomprasapp.listas.ListasViewModel
 
 class SuasListasActivity : AppCompatActivity() {
 

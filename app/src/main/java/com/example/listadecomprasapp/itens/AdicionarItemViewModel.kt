@@ -1,11 +1,10 @@
-package com.example.listadecomprasapp.viewmodel
+package com.example.listadecomprasapp.itens
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.listadecomprasapp.data.ItemDaLista
-import com.example.listadecomprasapp.repository.ListasRepository
+import com.example.listadecomprasapp.data.ListasRepository
 import kotlinx.coroutines.launch
 
 class AdicionarItemViewModel : ViewModel() {

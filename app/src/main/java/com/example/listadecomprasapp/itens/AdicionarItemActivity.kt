@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp.ui
+package com.example.listadecomprasapp.itens
 
 import android.R
 import android.os.Bundle
@@ -7,9 +7,6 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.example.listadecomprasapp.viewmodel.AdicionarItemViewModel
-import com.example.listadecomprasapp.data.Categoria
-import com.example.listadecomprasapp.data.ItemDaLista
 import com.example.listadecomprasapp.databinding.ActivityAdicionarItemBinding
 
 class AdicionarItemActivity : AppCompatActivity() {

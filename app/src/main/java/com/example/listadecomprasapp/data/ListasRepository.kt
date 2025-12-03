@@ -1,8 +1,8 @@
-package com.example.listadecomprasapp.repository
+package com.example.listadecomprasapp.data
 
 import android.net.Uri
-import com.example.listadecomprasapp.data.ItemDaLista
-import com.example.listadecomprasapp.data.ListaDeCompras
+import com.example.listadecomprasapp.itens.ItemDaLista
+import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore

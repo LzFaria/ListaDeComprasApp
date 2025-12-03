@@ -1,4 +1,4 @@
-package com.example.listadecomprasapp.ui
+package com.example.listadecomprasapp.listas
 
 import android.Manifest
 import android.R
@@ -13,9 +13,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.load
-import com.example.listadecomprasapp.viewmodel.AdicionarListaViewModel
-import com.example.listadecomprasapp.data.ListaDeCompras
+import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ActivityAdicionarListaBinding
+import com.example.listadecomprasapp.listas.AdicionarListaViewModel
 import java.io.File
 
 class AdicionarListaActivity : AppCompatActivity() {

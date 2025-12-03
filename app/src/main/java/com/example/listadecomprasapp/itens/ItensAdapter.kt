@@ -1,12 +1,10 @@
-package com.example.listadecomprasapp.adapter
+package com.example.listadecomprasapp.itens
 
 import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.listadecomprasapp.R
-import com.example.listadecomprasapp.data.Categoria
-import com.example.listadecomprasapp.data.ItemDaLista
 import com.example.listadecomprasapp.databinding.ItemItemListaBinding
 
 class ItensAdapter(
