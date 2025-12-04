@@ -20,6 +20,7 @@ class AdicionarListaViewModel : ViewModel() {
     private val _loading = MutableLiveData<Boolean>(false)
     val loading: LiveData<Boolean> = _loading
 
+
     private val _listaParaEditar = MutableLiveData<ListaDeCompras?>()
     val listaParaEditar: LiveData<ListaDeCompras?> = _listaParaEditar
 

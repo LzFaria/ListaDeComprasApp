@@ -51,8 +51,8 @@ class CadastroActivity : AppCompatActivity() {
             }
         }
 
-        cadastroViewModel.loading.observe(this) { estaCarregando ->
-            if (estaCarregando) {
+        cadastroViewModel.loading.observe(this) { isLoading ->
+            if (isLoading) {
                 binding.progressBarCadastro.visibility = View.VISIBLE
                 binding.buttonCriar.isEnabled = false
                 binding.textViewVoltarLogin.isEnabled = false

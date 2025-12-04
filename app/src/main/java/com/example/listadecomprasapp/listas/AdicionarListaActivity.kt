@@ -5,6 +5,7 @@ import android.R
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -118,7 +119,15 @@ class AdicionarListaActivity : AppCompatActivity() {
 
         // Observa o "loading"
         viewModel.loading.observe(this) { isLoading ->
-            binding.buttonAdicionarLista.isEnabled = !isLoading
+            if (isLoading) {
+                binding.progressBarAdicionarListas.visibility = View.VISIBLE
+                binding.buttonAdicionarLista.isEnabled = false
+                binding.buttonAdicionarLista.alpha = 0.5f
+            } else {
+                binding.progressBarAdicionarListas.visibility = View.GONE
+                binding.buttonAdicionarLista.isEnabled = true
+                binding.buttonAdicionarLista.alpha = 1.0f
+            }
         }
 
         // Observa a lista que o Chef buscou para edição
