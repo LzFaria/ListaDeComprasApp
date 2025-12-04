@@ -1,5 +1,6 @@
 package com.example.listadecomprasapp.itens
 
+import android.graphics.Color
 import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -50,9 +51,13 @@ class ItensAdapter(
             if (comprado) {
                 binding.textViewNomeItem.paintFlags = binding.textViewNomeItem.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 binding.textViewQtdUnidade.paintFlags = binding.textViewQtdUnidade.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                binding.root.setBackgroundColor(Color.parseColor("#F0F0F0"))
+                binding.root.alpha = 0.6f
             } else {
                 binding.textViewNomeItem.paintFlags = binding.textViewNomeItem.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 binding.textViewQtdUnidade.paintFlags = binding.textViewQtdUnidade.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                binding.root.setBackgroundColor(Color.WHITE)
+                binding.root.alpha = 1.0f
             }
         }
     }
