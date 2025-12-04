@@ -18,7 +18,11 @@ class CadastroViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
+    private val _loading = MutableLiveData<Boolean>(false)
+    val loading: LiveData<Boolean> = _loading
+
     fun cadastrar(nome: String, email: String, senha: String) {
+        _loading.postValue(true)
         viewModelScope.launch {
             try {
                 val user = repository.cadastrarUsuario(email, senha)
@@ -32,6 +36,8 @@ class CadastroViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _error.postValue("Falha no cadastro: ${e.message}")
+            } finally {
+                _loading.postValue(false)
             }
         }
     }

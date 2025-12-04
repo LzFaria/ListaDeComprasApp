@@ -2,6 +2,7 @@ package com.example.listadecomprasapp.auth
 
 import android.os.Bundle
 import android.util.Patterns
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -47,6 +48,20 @@ class CadastroActivity : AppCompatActivity() {
             if (errorMessage.isNotEmpty()) {
                 // O Chef avisou que deu um problema!
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        cadastroViewModel.loading.observe(this) { estaCarregando ->
+            if (estaCarregando) {
+                binding.progressBarCadastro.visibility = View.VISIBLE
+                binding.buttonCriar.isEnabled = false
+                binding.textViewVoltarLogin.isEnabled = false
+                binding.cadastroContainer.alpha = 0.5f
+            } else {
+                binding.progressBarCadastro.visibility = View.GONE
+                binding.buttonCriar.isEnabled = true
+                binding.textViewVoltarLogin.isEnabled = true
+                binding.cadastroContainer.alpha = 1.0f
             }
         }
     }
