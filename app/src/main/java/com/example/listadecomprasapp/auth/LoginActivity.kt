@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.util.Patterns
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -61,6 +62,21 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel.resetEnviado.observe(this) { enviado ->
             if (enviado) {
                 Toast.makeText(this, "E-mail de recuperação enviado! Verifique sua caixa de entrada.", Toast.LENGTH_LONG).show()
+            }
+        }
+        loginViewModel.loading.observe(this) { estaCarregando ->
+            if (estaCarregando) {
+                binding.progressBarLogin.visibility = View.VISIBLE
+                binding.buttonAcessar.isEnabled = false
+                binding.textViewCriarConta.isEnabled = false
+                binding.textViewRecuperarSenha.isEnabled = false
+                binding.loginContainer.alpha = 0.5f
+            } else {
+                binding.progressBarLogin.visibility = View.GONE
+                binding.buttonAcessar.isEnabled = true
+                binding.textViewCriarConta.isEnabled = true
+                binding.textViewRecuperarSenha.isEnabled = true
+                binding.loginContainer.alpha = 1.0f
             }
         }
     }

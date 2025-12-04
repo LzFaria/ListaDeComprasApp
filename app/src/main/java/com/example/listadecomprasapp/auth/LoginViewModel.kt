@@ -21,13 +21,19 @@ class LoginViewModel : ViewModel() {
     private val _resetEnviado = MutableLiveData<Boolean>(false)
     val resetEnviado: LiveData<Boolean> = _resetEnviado
 
+    private val _loading = MutableLiveData<Boolean>(false)
+    val loading: LiveData<Boolean> = _loading
+
     fun login(email: String, senha: String) {
+        _loading.postValue(true)
         viewModelScope.launch {
             try {
                 val user = repository.loginUsuario(email, senha)
                 _loginResult.postValue(user)
             } catch (e: Exception) {
                 _error.postValue("Falha no login: ${e.message}")
+            } finally {
+                _loading.postValue(false)
             }
         }
     }
