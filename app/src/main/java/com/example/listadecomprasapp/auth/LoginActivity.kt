@@ -64,8 +64,8 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "E-mail de recuperação enviado! Verifique sua caixa de entrada.", Toast.LENGTH_LONG).show()
             }
         }
-        loginViewModel.loading.observe(this) { estaCarregando ->
-            if (estaCarregando) {
+        loginViewModel.loading.observe(this) { isLoading ->
+            if (isLoading) {
                 binding.progressBarLogin.visibility = View.VISIBLE
                 binding.buttonAcessar.isEnabled = false
                 binding.textViewCriarConta.isEnabled = false
