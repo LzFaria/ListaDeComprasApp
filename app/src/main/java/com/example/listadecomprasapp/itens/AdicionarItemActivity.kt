@@ -2,6 +2,7 @@ package com.example.listadecomprasapp.itens
 
 import android.R
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
@@ -70,8 +71,16 @@ class AdicionarItemActivity : AppCompatActivity() {
                 Toast.makeText(this, "Erro: $it", Toast.LENGTH_LONG).show()
             }
         }
-        viewModel.loading.observe(this) {
-            binding.buttonAdicionarItem.isEnabled = !it
+        viewModel.loading.observe(this) { isLoading ->
+            if (isLoading) {
+                binding.progressBarAdicionarItem.visibility = View.VISIBLE
+                binding.buttonAdicionarItem.isEnabled = false
+                binding.buttonAdicionarItem.alpha = 0.5f
+            } else {
+                binding.progressBarAdicionarItem.visibility = View.GONE
+                binding.buttonAdicionarItem.isEnabled = true
+                binding.buttonAdicionarItem.alpha = 1.0f
+            }
         }
         viewModel.itemParaEditar.observe(this) { item ->
             if (item != null) {
