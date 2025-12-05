@@ -5,7 +5,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.data.ListasRepository
 import kotlinx.coroutines.launch
 
@@ -24,7 +23,6 @@ class AdicionarListaViewModel : ViewModel() {
     private val _listaParaEditar = MutableLiveData<ListaDeCompras?>()
     val listaParaEditar: LiveData<ListaDeCompras?> = _listaParaEditar
 
-    //Salva uma NOVA lista (Sem mudanças)
 
     fun salvarLista(nome: String, uriLocal: Uri?) {
         _loading.postValue(true)
@@ -40,14 +38,11 @@ class AdicionarListaViewModel : ViewModel() {
         }
     }
 
-    //Busca os dados da lista que o usuário quer editar
     fun carregarLista(id: String) {
         _loading.postValue(true)
         viewModelScope.launch {
             try {
-                // Pede ao Gerente para buscar a lista por ID
                 val lista = repository.getListaPorId(id)
-                // Coloca no quadro de avisos
                 _listaParaEditar.postValue(lista)
             } catch (e: Exception) {
                 _error.postValue(e.message)
@@ -57,7 +52,6 @@ class AdicionarListaViewModel : ViewModel() {
         }
     }
 
-    //Salva as MUDANÇAS de uma lista existente
     fun atualizarLista(
         id: String,
         novoNome: String,
@@ -67,9 +61,7 @@ class AdicionarListaViewModel : ViewModel() {
         _loading.postValue(true)
         viewModelScope.launch {
             try {
-                // Pede ao Gerente para atualizar
                 repository.atualizarLista(id, novoNome, novaUriLocal, urlImagemAntiga)
-                // Avisa que terminou
                 _concluido.postValue(true)
             } catch (e: Exception) {
                 _error.postValue(e.message)

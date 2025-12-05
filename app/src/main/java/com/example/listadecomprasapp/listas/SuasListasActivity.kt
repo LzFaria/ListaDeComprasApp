@@ -8,13 +8,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.listadecomprasapp.listas.ListasAdapter
 import com.example.listadecomprasapp.auth.LoginActivity
-import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ActivitySuasListasBinding
-import com.example.listadecomprasapp.listas.AdicionarListaActivity
 import com.example.listadecomprasapp.itens.ListaItensActivity
-import com.example.listadecomprasapp.listas.ListasViewModel
 
 class SuasListasActivity : AppCompatActivity() {
 
@@ -63,7 +59,7 @@ class SuasListasActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        super.onResume() // Esta também é obrigatória
+        super.onResume()
         binding.searchViewListas.setQuery("", false)
         listasViewModel.carregarListas()
     }
@@ -71,13 +67,13 @@ class SuasListasActivity : AppCompatActivity() {
     private fun setupRecyclerViewInicial() {
         adapter = ListasAdapter(
             emptyList(),
-            { listaClicada -> // Clique Simples (Navegar)
+            { listaClicada ->
                 val intent = Intent(this, ListaItensActivity::class.java)
                 intent.putExtra("NOME_DA_LISTA", listaClicada.nome)
                 intent.putExtra("LISTA_ID", listaClicada.id)
                 startActivity(intent)
             },
-            { listaClicada -> // Clique Longo (Editar/Excluir Lista)
+            { listaClicada ->
                 mostrarDialogoOpcoesLista(listaClicada)
             }
         )
@@ -85,7 +81,6 @@ class SuasListasActivity : AppCompatActivity() {
         binding.recyclerViewListas.adapter = adapter
     }
 
-    // --- Funções de Diálogo e Logout
 
     private fun mostrarDialogoOpcoesLista(lista: ListaDeCompras) {
         val opcoes = arrayOf("Editar", "Excluir")

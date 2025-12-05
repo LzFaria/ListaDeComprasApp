@@ -14,9 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.load
-import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ActivityAdicionarListaBinding
-import com.example.listadecomprasapp.listas.AdicionarListaViewModel
 import java.io.File
 
 class AdicionarListaActivity : AppCompatActivity() {
@@ -99,25 +97,18 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
     }
 
-    // --- Funções do ViewModel e UI ---
-
     private fun observarViewModel() {
-        // Observa o "concluido"
         viewModel.concluido.observe(this) { concluido ->
             if (concluido) {
                 Toast.makeText(this, "Salvo com sucesso!", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
-
-        // Observa o "error"
         viewModel.error.observe(this) { error ->
             if (error != null && error.isNotEmpty()) {
                 Toast.makeText(this, "Erro: $error", Toast.LENGTH_LONG).show()
             }
         }
-
-        // Observa o "loading"
         viewModel.loading.observe(this) { isLoading ->
             if (isLoading) {
                 binding.progressBarAdicionarListas.visibility = View.VISIBLE
@@ -129,14 +120,11 @@ class AdicionarListaActivity : AppCompatActivity() {
                 binding.buttonAdicionarLista.alpha = 1.0f
             }
         }
-
-        // Observa a lista que o Chef buscou para edição
         viewModel.listaParaEditar.observe(this) { lista ->
             if (lista != null) {
                 listaAtual = lista
                 preencherFormulario(lista)
             } else if (modoDeEdicao) {
-                // Se estamos em modo de edição e a lista veio nula, é um erro
                 Toast.makeText(this, "Erro ao carregar lista para edição", Toast.LENGTH_SHORT).show()
                 finish()
             }
@@ -152,7 +140,6 @@ class AdicionarListaActivity : AppCompatActivity() {
         }
 
         if (modoDeEdicao && listaAtual != null) {
-            // --- MODO EDIÇÃO ---
             viewModel.atualizarLista(
                 id = listaAtual!!.id,
                 novoNome = nomeDaLista,
@@ -160,7 +147,6 @@ class AdicionarListaActivity : AppCompatActivity() {
                 urlImagemAntiga = listaAtual!!.imageUrl
             )
         } else {
-            // --- MODO ADICIONAR ---
             viewModel.salvarLista(nomeDaLista, novaImagemUriSelecionada)
         }
     }
@@ -169,15 +155,12 @@ class AdicionarListaActivity : AppCompatActivity() {
         binding.editTextNomeLista.setText(lista.nome)
 
         if (lista.imageUrl != null) {
-            // Usa a Coil para carregar a URL do Firebase na ImageView
             binding.imageViewPreview.load(lista.imageUrl) {
                 crossfade(true)
                 placeholder(R.drawable.ic_menu_gallery)
             }
         }
     }
-
-    // --- Funções da Câmera/Galeria ---
 
     private fun mostrarDialogoEscolhaFoto() {
         val opcoes = arrayOf("Tirar Foto", "Escolher da Galeria")

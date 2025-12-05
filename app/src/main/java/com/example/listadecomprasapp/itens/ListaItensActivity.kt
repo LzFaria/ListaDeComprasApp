@@ -8,7 +8,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.listadecomprasapp.itens.ItensAdapter
 import com.example.listadecomprasapp.databinding.ActivityListaItensBinding
 import com.example.listadecomprasapp.listas.AdicionarListaActivity
 
@@ -45,7 +44,6 @@ class ListaItensActivity : AppCompatActivity() {
             abrirTelaDeEdicaoLista()
         }
 
-        // --- Listener da Busca ---
         binding.searchViewItens.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -81,17 +79,16 @@ class ListaItensActivity : AppCompatActivity() {
         }
     }
 
-    // setupRecyclerViewInicial
     private fun setupRecyclerViewInicial() {
         adapter = ItensAdapter(
             emptyList(),
-            { item, isChecked -> // Checkbox
+            { item, isChecked ->
                 viewModel.atualizarItemComprado(idDaListaAtual!!, item, isChecked)
             },
-            { itemClicado -> // Clique Longo
+            { itemClicado ->
                 mostrarDialogoDeExclusao(itemClicado)
             },
-            { itemClicado -> // Clique Simples
+            { itemClicado ->
                 abrirTelaDeEdicaoItem(itemClicado)
             }
         )
@@ -99,7 +96,6 @@ class ListaItensActivity : AppCompatActivity() {
         binding.recyclerViewItens.adapter = adapter
     }
 
-    // --- Funções de Diálogo e Navegação ---
     private fun mostrarDialogoDeExclusao(item: ItemDaLista) {
         AlertDialog.Builder(this)
             .setTitle("Excluir Item")

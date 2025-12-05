@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.listadecomprasapp.databinding.ActivityCadastroBinding
-import com.example.listadecomprasapp.auth.CadastroViewModel
 
 class CadastroActivity : AppCompatActivity() {
 
@@ -22,31 +21,25 @@ class CadastroActivity : AppCompatActivity() {
 
         observarViewModel()
 
-        // Configurar os botões
         binding.buttonCriar.setOnClickListener {
             fazerCadastro()
         }
 
-        // (Lógica do seu botão "Voltar")
         binding.textViewVoltarLogin.setOnClickListener {
-            finish() // Simplesmente fecha esta tela
+            finish()
         }
     }
 
-    //Configura os "observadores"
     private fun observarViewModel() {
-        // Observa o quadro de SUCESSO
         cadastroViewModel.cadastroResult.observe(this) { firebaseUser ->
             if (firebaseUser != null) {
                 Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show()
-                finish() // Fecha a tela de Cadastro e volta pro Login
+                finish()
             }
         }
 
-        // Observa o quadro de ERRO
         cadastroViewModel.error.observe(this) { errorMessage ->
             if (errorMessage.isNotEmpty()) {
-                // O Chef avisou que deu um problema!
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
         }
@@ -66,7 +59,6 @@ class CadastroActivity : AppCompatActivity() {
         }
     }
 
-    //Função chamada pelo clique do botão "Criar"
     private fun fazerCadastro() {
         val nome = binding.editTextNomeCompleto.text.toString()
         val email = binding.editTextEmailCadastro.text.toString()

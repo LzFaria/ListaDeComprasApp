@@ -11,9 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.listadecomprasapp.databinding.ActivityLoginBinding
-import com.example.listadecomprasapp.auth.CadastroActivity
 import com.example.listadecomprasapp.listas.SuasListasActivity
-import com.example.listadecomprasapp.auth.LoginViewModel
 
 class LoginActivity : AppCompatActivity() {
 
@@ -25,7 +23,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Listeners dos botões
         binding.buttonAcessar.setOnClickListener {
             fazerLogin()
         }
@@ -42,7 +39,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun observarViewModel() {
-        // Observa o sucesso do LOGIN
         loginViewModel.loginResult.observe(this) { firebaseUser ->
             if (firebaseUser != null) {
                 Toast.makeText(this, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
@@ -52,13 +48,11 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Observa o ERRO (para login ou recuperação)
         loginViewModel.error.observe(this) { errorMessage ->
             if (errorMessage.isNotEmpty()) {
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
         }
-        // Observa o sucesso da RECUPERAÇÃO DE SENHA
         loginViewModel.resetEnviado.observe(this) { enviado ->
             if (enviado) {
                 Toast.makeText(this, "E-mail de recuperação enviado! Verifique sua caixa de entrada.", Toast.LENGTH_LONG).show()
@@ -82,7 +76,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun fazerLogin() {
-        // Lógica de validação do login
         val email = binding.editTextEmail.text.toString()
         val senha = binding.editTextSenha.text.toString()
         if (email.isEmpty() || senha.isEmpty()) { /* ... */ }

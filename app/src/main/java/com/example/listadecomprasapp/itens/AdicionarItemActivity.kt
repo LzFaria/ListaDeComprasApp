@@ -19,7 +19,6 @@ class AdicionarItemActivity : AppCompatActivity() {
     private var itemParaEditar: ItemDaLista? = null
     private var modoDeEdicao = false
 
-    // Lista de opções para o Spinner de Categoria (baseado no Enum)
     private val categorias = Categoria.values().map { it.nome }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,13 +26,11 @@ class AdicionarItemActivity : AppCompatActivity() {
         binding = ActivityAdicionarItemBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Chamar as funções para popular AMBOS os spinners
         setupSpinnerUnidades()
         setupSpinnerCategoria()
 
         observarViewModel()
 
-        // Receber os IDs
         listaId = intent.getStringExtra("LISTA_ID")
         val itemId = intent.getStringExtra("ITEM_ID_PARA_EDITAR")
 
@@ -44,11 +41,9 @@ class AdicionarItemActivity : AppCompatActivity() {
         }
 
         if (itemId == null) {
-            // Modo Adicionar
             modoDeEdicao = false
             binding.buttonAdicionarItem.text = "Adicionar Item"
         } else {
-            // Modo Edição
             modoDeEdicao = true
             binding.buttonAdicionarItem.text = "Salvar Alterações"
             viewModel.carregarItem(listaId!!, itemId)
@@ -100,7 +95,6 @@ class AdicionarItemActivity : AppCompatActivity() {
     private fun salvarItem() {
         val nome = binding.editTextNomeItem.text.toString()
         val quantidade = binding.editTextQuantidade.text.toString()
-        // Agora 'spinnerUnidade' tem um adapter, então 'selectedItem' não é nulo
         val unidade = binding.spinnerUnidade.selectedItem.toString()
         val categoria = binding.spinnerCategoria.selectedItem.toString()
 
@@ -110,7 +104,6 @@ class AdicionarItemActivity : AppCompatActivity() {
         }
 
         if (modoDeEdicao && itemParaEditar != null) {
-            // ATUALIZAR
             val itemAtualizado = itemParaEditar!!.copy(
                 nome = nome,
                 quantidade = quantidade,
@@ -120,7 +113,6 @@ class AdicionarItemActivity : AppCompatActivity() {
             viewModel.atualizarItem(listaId!!, itemAtualizado)
 
         } else {
-            // ADICIONAR
             val novoItem = ItemDaLista(
                 nome = nome,
                 quantidade = quantidade,

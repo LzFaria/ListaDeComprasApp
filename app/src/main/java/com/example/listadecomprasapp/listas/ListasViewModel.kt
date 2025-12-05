@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.listadecomprasapp.auth.AuthRepository
-import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.data.ListasRepository
 import kotlinx.coroutines.launch
 

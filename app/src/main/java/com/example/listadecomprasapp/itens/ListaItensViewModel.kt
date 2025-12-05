@@ -33,10 +33,8 @@ class ListaItensViewModel : ViewModel() {
     fun carregarNomeDaLista(listaId: String) {
         viewModelScope.launch {
             try {
-                // Pede ao "Gerente"
                 val lista = repository.getListaPorId(listaId)
                 if (lista != null) {
-                    // Avisa no quadro de avisos qual é o nome
                     _nomeDaLista.postValue(lista.nome)
                 } else {
                     _error.postValue("Lista não encontrada")

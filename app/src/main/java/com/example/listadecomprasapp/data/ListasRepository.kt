@@ -43,21 +43,16 @@ object ListasRepository {
         }
     }
 
-    // --- Funções de ITENS ---
-
     suspend fun getItensDaLista(listaId: String, filtroDeBusca: String = ""): List<ItemDaLista> {
         try {
             var query: Query = getCaminhoItens(listaId)
 
             if (filtroDeBusca.isNotEmpty()) {
-                // --- LÓGICA DE BUSCA COM FILTRO ---
                 val filtroMinusculo = filtroDeBusca.lowercase()
                 query = query.whereGreaterThanOrEqualTo("nome_busca", filtroMinusculo)
                     .whereLessThanOrEqualTo("nome_busca", filtroMinusculo + '\uf8ff')
-                    // A primeira ordenação DEVE ser no campo do filtro
                     .orderBy("nome_busca")
             } else {
-                // --- LÓGICA DE BUSCA SEM FILTRO ---
                 query = query.orderBy("comprado")
                     .orderBy("categoria")
                     .orderBy("nome")

@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.example.listadecomprasapp.listas.ListaDeCompras
 import com.example.listadecomprasapp.databinding.ItemListaBinding
 
 class ListasAdapter(
